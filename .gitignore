@@ -52,3 +52,13 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Environment files (use .env.example as the template)
+.env
+.env.*
+!.env.example
+
+# Reasoning logs — the [Ll]ogs/ rule above (from the .NET template) is for build
+# output, not our docs/logs/ directory. Un-ignore explicitly.
+!docs/logs/
+!docs/logs/**
