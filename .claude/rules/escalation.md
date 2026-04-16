@@ -4,9 +4,18 @@ When to **stop and ask Martin** before taking the next action. These rules exist
 
 ## Stop and ask — no exceptions
 
-1. **Codex usage is close to its limit.** If `/codex:setup`, `/codex:status`, or any Codex companion output mentions remaining quota, rate limiting, or a "close to limit" warning, stop. Do not start a new `/codex:rescue`, `/codex:review`, or `/codex:adversarial-review` run until Martin confirms.
+1. **Codex usage is close to its limit.** If `/codex:setup`, `/codex:status`, or any Codex companion output mentions remaining quota, rate limiting, or a "close to limit" warning, stop. Do not start a new `/codex:rescue`, `/codex:review`, or `/codex:adversarial-review` run until Martin confirms. **If quota is fully exhausted: we wait.** Do not switch Codex to API-key mode to keep going (see "Codex auth mode" below).
 2. **Codex plugin / CLI is unreachable.** If `/codex:setup` reports `ready: false`, `auth.loggedIn: false`, or a `codex-companion.mjs` call errors out with auth / socket / transport failures, stop. Do not fall back to writing the implementation yourself.
 3. **Any Docker or Docker Compose problem** while working on a non-infra task. Examples: `docker compose up` fails, a container won't become healthy, a volume won't mount, a port is already bound, a build cache corruption. Stop the current task and surface the docker failure before continuing.
+
+## Codex auth mode — ChatGPT subscription only
+
+Martin pays for Codex through the **$20 ChatGPT subscription**. Do not run Codex against the paid **OpenAI API** (per-token billing) under any circumstance.
+
+- `/codex:setup --json` must report `"authMethod": "chatgpt"`. If it ever reports `"apikey"` or anything else, stop — do not issue `/codex:rescue`, `/codex:review`, or `/codex:adversarial-review` until Martin confirms.
+- Never set `OPENAI_API_KEY` in the environment, in `.env`, in `docker-compose.yml`, or inside any Codex brief or script. That env var silently flips Codex into API mode.
+- Never suggest `codex login --api-key ...`, `codex login --provider openai`, or any equivalent that swaps to API-key auth.
+- If ChatGPT-plan quota runs out: **we wait** for it to reset. That is the policy — do not offer a "just for this one run" API-mode workaround. Surface the exhaustion to Martin and pause.
 
 ## Codex iteration budget — max 2 passes per feature slice
 
@@ -37,6 +46,7 @@ Log every pass in the reasoning log's *Status / Next* section with the Codex job
 - Hiding a Codex quota warning inside a reasoning log instead of surfacing it at the moment it appeared.
 - A **third Codex pass** on the same slice without Martin's go-ahead (see iteration-budget section).
 - Hand-patching Codex's output after Pass 2 instead of stopping and reporting.
+- Running Codex in **API-key mode** (`OPENAI_API_KEY` set, or `authMethod != "chatgpt"` in `/codex:setup`). ChatGPT-subscription auth only.
 
 ## Out of scope for this rule
 
