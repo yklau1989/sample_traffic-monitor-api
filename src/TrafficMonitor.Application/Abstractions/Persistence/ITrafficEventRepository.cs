@@ -8,5 +8,7 @@ public interface ITrafficEventRepository
 
     Task<TrafficEvent?> FindByEventIdAsync(Guid eventId, CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<TrafficEvent>> ListAsync(CancellationToken cancellationToken);
+
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

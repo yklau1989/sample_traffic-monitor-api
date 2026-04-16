@@ -19,6 +19,14 @@ public sealed class TrafficEventRepository(TrafficMonitorDbContext dbContext) : 
             .SingleOrDefaultAsync(trafficEvent => trafficEvent.EventId == eventId, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<TrafficEvent>> ListAsync(CancellationToken cancellationToken)
+    {
+        return await dbContext.TrafficEvents
+            .AsNoTracking()
+            .OrderByDescending(trafficEvent => trafficEvent.OccurredAt)
+            .ToListAsync(cancellationToken);
+    }
+
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
         return dbContext.SaveChangesAsync(cancellationToken);

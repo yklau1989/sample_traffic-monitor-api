@@ -25,3 +25,27 @@ Implemented the first persistence slice with a `TrafficEvent` aggregate in Domai
 - Verified: `dotnet ef database update --project src/TrafficMonitor.Infrastructure --startup-project src/TrafficMonitor.Api` applied the initial migration against the compose postgres service. Schema confirmed via `psql \d traffic_events` — `id` int PK, `event_id` uuid with unique index, snake_case columns, `detections` JSONB.
 - Follow-up applied by the orchestrator (Claude) outside Codex's sandbox: added `Microsoft.EntityFrameworkCore.Design` (10.0.0) to `TrafficMonitor.Api.csproj` so the `dotnet ef` CLI can resolve design-time services in the startup project. Codex scaffolded the migration assembly but could not run the `database update` step inside its sandbox (localhost socket blocked); the orchestrator ran it to green.
 - Next: issue #6 can add the ingest command/handler against `ITrafficEventRepository` and rely on the existing unique `event_id` constraint for idempotency handling.
+
+## Reviewer verdict
+
+Run by the `reviewer` agent on `feature/5-backend-persistence-slice` vs `main`.
+
+| Check | Result |
+|---|---|
+| Build | PASS |
+| Tests | PASS (1 passed, 0 failed) |
+| Migration | PASS (schema verified via `psql \d traffic_events`) |
+| Conventions (`code-style.md`, `security.md`) | PASS |
+| Reasoning log (4 required sections) | PASS |
+| Acceptance criteria | PASS after follow-up fix |
+
+Auto-fail checks all clear: no `.Result` / `.Wait()`; `IQueryable` stays inside `TrafficEventRepository`; no public setters on state fields; no hardcoded secrets; no raw SQL with interpolation; no DTO classes with settable properties. `Id` is `private set` and never exposed. `OwnsMany(...).ToJson()` and unique index on `EventId` both confirmed.
+
+Findings:
+
+1. **Missing `ListAsync` on `ITrafficEventRepository`** — the issue acceptance criteria called out "add, get by EventId, list" but the initial Codex commit only had `AddAsync` + `FindByEventIdAsync` + `SaveChangesAsync`. Fixed in a follow-up commit on the same branch: `ListAsync(CancellationToken)` returning `IReadOnlyList<TrafficEvent>`, ordered by `OccurredAt DESC`, `AsNoTracking()`. Rebuilt + tests green.
+2. Stale sandbox-blocker sentence in Status/Next — kept as historical context; explicitly paired with "orchestrator ran it to green" so future readers see the resolution.
+3. `Detection` + `BoundingBox` are `sealed record` with `private set` — intentional for EF hydration; record equality remains public-property-based. No bug; worth knowing when tests arrive.
+4. `Class1.cs` entries appearing as add-then-delete in the diff — scaffold artefacts from `dotnet new`, deleted in the same commit; no action.
+
+**Verdict: READY FOR MARTIN.**
