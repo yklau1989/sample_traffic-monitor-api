@@ -35,3 +35,47 @@ Two-service stack (`postgres` + `api`) defined in `docker-compose.yml` at the re
 5. API image runs as non-root (`docker compose exec api whoami` → `app`)
 
 **Next issue (suggested):** backend-dev adds `Npgsql.EntityFrameworkCore.PostgreSQL`, the `TrafficMonitor.Domain.TrafficEvent` entity, `TrafficDbContext`, and the first migration.
+
+---
+
+## Session handoff — 2026-04-16 (end of session)
+
+### Where things stand
+
+- **Branch:** `feature/1-docker-compose-baseline` (pushed to origin)
+- **PR #2:** open — https://github.com/yklau1989/sample_traffic-monitor-api/pull/2
+- **Issue #1:** all acceptance criteria ticked in the body; reviewer agent signed off in a PR comment; waiting on Martin's human review before merge.
+- **Commits on branch:**
+  - `a8c8c6e` chore: align project agents with CLAUDE.md
+  - `1896fb1` feat(#1): docker compose baseline for local dev environment
+  - `ebf4428` docs(#1): add setup + quick-start README
+
+### What actually got done this session
+
+1. Revised `CLAUDE.md` — tightened handoff model (reasoning-log-only, no separate `docs/handoff/`), added Session Resume protocol at the top, fixed frontend path (`frontend/` at repo root, not `src/TrafficMonitor.Frontend/`), added Running Locally section, added Codex hybrid workflow detail.
+2. Wrote the six `.claude/skills/*.md` files from scratch (codex-review, cqrs-light, csharp-clean-architecture, docker-compose, ef-core-patterns, sse-channel) — all derived from the Key Design Rules.
+3. Rewrote every `.claude/agents/*.md` — `develop-planner`, `backend-dev`, `frontend-dev`, `infra-dev`, `reviewer` — removing Skill Library drift and inlined extra agents (collapsed `reviewer.md` from api-reviewer + frontend-reviewer → one; dropped `database-admin` from `infra-dev.md`).
+4. Wrote `docs/architecture.md` (was empty).
+5. Created GitHub issue #1 via planner conventions (`[planner]` title prefix + `agent:planner` label).
+6. Implemented #1 — `docker-compose.yml`, multi-stage `Dockerfile`, `.env.example`, `.dockerignore`, `.gitignore` additions, stripped `Program.cs` to strict minimum with a connection-string guard, README rewritten.
+7. Proof of work: both services `healthy`, `curl /api/events` = 404 (reachable), clean `down -v`.
+8. Reviewer agent posted verdict **READY FOR MARTIN** on PR #2.
+
+### Open when the next session starts
+
+- **Martin's review of PR #2.** If approved → merge → close issue #1 → plan issue #2 (first backend-dev issue: Npgsql + DbContext + TrafficEvent entity + initial migration).
+- Anything Martin flags on the PR will need follow-up commits on the same branch.
+
+### Known landmines for future-me
+
+- **macOS `:5000`** is held by Control Center (AirPlay Receiver). Don't suggest `:5000` as a host port on this project — we're on `:8080`.
+- **`.gitignore` `[Ll]ogs/` rule** silently swallows anything matching. Kept an explicit `!docs/logs/**` un-ignore; do not remove without re-testing that reasoning logs stay tracked.
+- **`.claude/settings.local.json`** is auto-updated by the harness when permissions are granted. It'll show up as modified after most sessions. Not business logic — leave it alone unless the user stages it.
+- **`.NET 10` image tag `10.0` works** as of 2026-04 — verified by a successful build.
+- **`develop-planner.md` was empty at the start of this session**; Martin populated it mid-session. Don't trust a stale `wc -l` read.
+
+### Memory written this session
+
+- `feedback_git.md` — never commit to main/master; feature-branch commits pre-authorized
+- `feedback_issue_workflow.md` — on finishing a milestone: comment on the issue first, then open the PR
+
