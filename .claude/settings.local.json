@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(codex --version)",
+      "Bash(wc -l *.md)",
+      "Bash(ls src/)",
+      "Bash(ls tests/)",
+      "Bash(wc -l docs/*.md)",
+      "Bash(ls .claude/rules/)",
+      "Bash(ls .claude/hooks/)",
+      "Bash(dotnet build *)",
+      "Bash(gh auth *)"
+    ]
+  }
+}

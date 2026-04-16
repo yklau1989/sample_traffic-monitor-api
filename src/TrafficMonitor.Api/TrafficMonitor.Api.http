@@ -1,0 +1,6 @@
+@TrafficMonitor.Api_HostAddress = http://localhost:5124
+
+GET {{TrafficMonitor.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

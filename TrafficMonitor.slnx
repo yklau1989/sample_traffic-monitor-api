@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TrafficMonitor.Api/TrafficMonitor.Api.csproj" />
+    <Project Path="src/TrafficMonitor.Application/TrafficMonitor.Application.csproj" />
+    <Project Path="src/TrafficMonitor.Domain/TrafficMonitor.Domain.csproj" />
+    <Project Path="src/TrafficMonitor.Infrastructure/TrafficMonitor.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TrafficMonitor.Tests/TrafficMonitor.Tests.csproj" />
+  </Folder>
+</Solution>
