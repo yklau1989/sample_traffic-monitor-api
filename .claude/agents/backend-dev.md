@@ -73,7 +73,9 @@ After Codex returns a diff:
 2. `dotnet test` — all green. If the brief required new tests and Codex skipped them, push back before committing.
 3. Any new migration: `dotnet ef database update --project src/TrafficMonitor.Infrastructure --startup-project src/TrafficMonitor.Api`. Confirm schema via `psql` inside the compose service.
 4. Grep the diff for hardcoded secrets, connection strings, and `.Result` / `.Wait()` / `.GetAwaiter().GetResult()`.
-5. If any step fails, either feed the failure back into Codex via a follow-up `/codex:rescue --resume` or — if the fix is mechanical and truly small (one line, not a design choice) — make it in the reasoning log as an orchestrator follow-up and note it explicitly. No silent edits to Codex's output.
+5. If any step fails, feed the failure back into Codex via a single follow-up `/codex:rescue --resume`. Do **not** hand-patch Codex's output, even for a "one-line" fix.
+
+**Iteration budget — 2 passes max.** If the first Codex pass is 80–90% good, accept it and ship. If it misses, one follow-up `/codex:rescue --resume` with a specific fix list. If Pass 2 still falls short, stop and surface the situation to Martin — never start a Pass 3 or patch the code yourself. Full rule in `.claude/rules/escalation.md`. Log both Codex job IDs in the reasoning log.
 
 ## Reasoning log
 

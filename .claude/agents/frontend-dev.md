@@ -74,7 +74,9 @@ After Codex returns a diff:
 1. Start the API (`docker compose up --build` or `dotnet run`).
 2. Open the dashboard, run the smoke checks above. If the issue explicitly asks for Playwright / Cypress, confirm Codex wrote one.
 3. Grep the diff for hardcoded URLs, `console.log`, `innerHTML` with interpolation, `TODO` / `FIXME`.
-4. If anything fails, loop back to Codex with `/codex:rescue --resume` — don't silently patch the output.
+4. If anything fails, loop back to Codex with a single `/codex:rescue --resume`. Do **not** silently patch the output.
+
+**Iteration budget — 2 passes max.** If the first Codex pass is 80–90% good, accept it and ship. If it misses, one follow-up `/codex:rescue --resume` with a specific fix list. If Pass 2 still falls short, stop and surface the situation to Martin — never start a Pass 3 or patch the code yourself. Full rule in `.claude/rules/escalation.md`. Log both Codex job IDs in the reasoning log.
 
 ## Reasoning log
 
