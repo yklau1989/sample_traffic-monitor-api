@@ -6,6 +6,19 @@ Traffic incident monitoring API. AI video system detects highway events (debris,
 
 **Interview take-home.** Evaluators care about: schema design, codebase structure, trade-offs, code clarity.
 
+## Session Resume
+
+When Martin says "let's continue", "resume", "where were we", or similar at the start of a session, do this BEFORE taking any implementation action:
+
+1. **Read the most recently modified reasoning log** under `docs/logs/` (any `{range}/*-reasoning.md` — sort by mtime). There is no separate `docs/handoff/` directory; handoff state lives in reasoning logs.
+2. **List open GitHub issues** and partition them:
+   - `gh issue list --label agent:planner --state open` — planner-created backlog
+   - `gh issue list --state open -- --search '-label:agent:planner'` — **Martin's own issues**, treat these as higher priority unless Martin says otherwise
+3. **Check for in-progress branches**: `git branch -a` + `git status` — if there's an active `feature/{n}-...` branch with uncommitted work, surface it.
+4. **Summarise in one short message**: the last log's Status/Next, any Martin-authored open issues, and a proposed next step. Then wait for Martin's direction — do not start work until he confirms.
+
+Never assume the lowest-numbered issue is what to pick up next. Martin may have opened something more urgent.
+
 ## Tech Stack
 
 - .NET 10, ASP.NET Core Web API, EF Core, PostgreSQL, Docker Compose
@@ -127,8 +140,11 @@ dotnet ef database update --project src/TrafficMonitor.Infrastructure --startup-
 **Run the API:**
 ```bash
 dotnet run --project src/TrafficMonitor.Api
-# Swagger: http://localhost:5000/swagger
-# Dashboard: http://localhost:5000/  (served from Frontend/)
+# Swagger: http://localhost:5000/swagger (dotnet run default)
+# Dashboard: http://localhost:5000/  (served from frontend/)
+
+# Inside Docker, the API is exposed on :8080 — http://localhost:8080/...
+# Rationale: macOS Control Center (AirPlay Receiver) binds :5000 and can't reliably be freed.
 ```
 
 **Full stack (evaluator path):**

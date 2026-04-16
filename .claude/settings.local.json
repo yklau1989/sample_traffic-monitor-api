@@ -9,7 +9,19 @@
       "Bash(ls .claude/rules/)",
       "Bash(ls .claude/hooks/)",
       "Bash(dotnet build *)",
-      "Bash(gh auth *)"
+      "Bash(gh auth *)",
+      "Bash(gh repo *)",
+      "Bash(gh label *)",
+      "Bash(gh issue *)",
+      "Bash(git checkout *)",
+      "Bash(docker version *)",
+      "Bash(docker compose *)",
+      "Bash(docker context *)",
+      "Bash(lsof -nP -iTCP:5000 -sTCP:LISTEN)",
+      "Bash(docker volume *)",
+      "Bash(git check-ignore *)",
+      "Bash(git ls-tree *)",
+      "Bash(echo \"exit=$?\")"
     ]
   }
 }
