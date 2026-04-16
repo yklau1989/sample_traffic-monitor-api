@@ -1,0 +1,60 @@
+# Documentation rules
+
+Two distinct audiences. Do not mix them.
+
+## Evaluator-facing docs (hand-curated deliverables)
+
+Kept current as the code evolves. Terse, accurate, opinionated.
+
+| File | Purpose | Keep in sync with |
+|---|---|---|
+| `docs/architecture.md` | System design, Clean Architecture layers, CQRS rationale, trade-offs, what's out of scope | Any structural change |
+| `docs/api-reference.md` | Every endpoint: method, path, request, response, status codes, examples | Any controller/DTO change |
+| `docs/deployment.md` | Docker Compose, env vars, first-run commands, ports, operational notes | Any infra/compose/env change |
+| `README.md` | Setup + quick-start only. One-screen friendly. | First-time run path |
+
+Rules:
+
+- Code changes **without** a docs update in the same PR are only acceptable if no evaluator-facing surface changed. Reviewer checks this.
+- Diagrams: ASCII first, Mermaid if it genuinely helps. No binary image files in `docs/` unless unavoidable.
+- No TODOs in evaluator docs. If it's not done, do not mention it.
+
+## Reasoning logs (AI tool usage artifact)
+
+One per issue at `docs/logs/{range}/{issue-number}-reasoning.md` — e.g. `docs/logs/001-010/003-reasoning.md`.
+
+Ranges: `001-010` (foundation), `011-020` (core + real-time), `021-030` (polish). Create the directory on first use.
+
+**Required sections:**
+
+1. **Decision** — one paragraph: what was chosen.
+2. **Options considered** — bulleted list of the alternatives; for each, why it lost.
+3. **Trade-offs** — what this decision costs, explicitly.
+4. **Status / Next** — what's verified, what's open, what the next issue should pick up. This is the cross-session handoff.
+
+Optionally:
+
+- **Reviewer verdict** — appended by the `reviewer` agent after diff review.
+- **Session handoff** — appended at end-of-session with branch state, open PRs, landmines.
+
+Rules:
+
+- Every agent writes one before marking an issue done. No log, no merge.
+- Write it in the same PR as the code it documents.
+- Keep under ~200 lines. If a decision needs more, it's an ADR (see below).
+
+## Architecture Decision Records (optional)
+
+For decisions that will outlive a single issue: `docs/decisions/NNNN-short-slug.md`. Use MADR-lite: Context, Decision, Consequences. Only create when the decision is genuinely load-bearing — most things belong in a reasoning log.
+
+## What does NOT go in `docs/`
+
+- Planning docs, checklists, scratchpads — use GitHub Issues or a plan, not a file.
+- Session summaries — use the reasoning log's "Session handoff" section, not a new file.
+- Memory content — that lives in the Claude auto-memory directory, not the repo.
+- Meeting notes — out of scope.
+
+## File-creation discipline
+
+- Do **not** create new `.md` files reflexively. Before creating one, check there isn't already a place it belongs (architecture.md, api-reference.md, a reasoning log).
+- `CLAUDE.md` is edited; it is not a dumping ground. Trim as much as you add.
