@@ -6,8 +6,4 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\TrafficMonitor.Domain\TrafficMonitor.Domain.csproj" />
-  </ItemGroup>
-
 </Project>
