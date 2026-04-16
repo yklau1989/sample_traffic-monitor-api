@@ -49,3 +49,37 @@ Findings:
 4. `Class1.cs` entries appearing as add-then-delete in the diff — scaffold artefacts from `dotnet new`, deleted in the same commit; no action.
 
 **Verdict: READY FOR MARTIN.**
+
+---
+
+## Session handoff — 2026-04-16 (end of session)
+
+### Where things stand
+
+- **On `main`**, up to date with origin. `.claude/settings.local.json` shows as modified — harness auto-drift, do not commit.
+- **Issues #1, #3, #5 merged this session.** PRs #2, #4, #6 all merged with merge commits. No open issues, no open PRs.
+- Branches kept (not deleted — Martin's case-by-case rule): `feature/1-docker-compose-baseline`, `feature/3-rules-files`, `feature/5-backend-persistence-slice`.
+- Postgres compose service left running (`docker compose ps` shows `postgres-1 healthy`). `traffic_events` table exists from the #5 migration.
+
+### What this session accomplished
+
+1. Merged #1 (Docker Compose baseline) — reviewed previously, Martin approved, merged.
+2. Opened + merged #3 (populate `.claude/rules/*.md`) — 5 files, each ≤100 lines, reviewer READY FOR MARTIN.
+3. Opened + merged #5 (backend persistence slice) via the hybrid workflow: **Codex drafted → Claude built/tested/migrated to green → reviewer agent approved → Claude opened PR + merged.** Added `Microsoft.EntityFrameworkCore.Design` (Codex missed it) and `ITrafficEventRepository.ListAsync` (reviewer gap).
+
+### Open when the next session starts
+
+- **Next issue to plan:** ingest handler + `POST /api/events` endpoint + CQRS command. Should rely on unique `event_id` index for idempotency (duplicate → 200 OK, not error). Ingest DTO lives in `Application/Commands/`; controller in `Api/`. Fake event generator is a separate issue; SSE also separate.
+- **Hybrid workflow confirmed working.** Codex sandbox blocks `.git/index.lock` writes and localhost sockets — orchestrator must always run build/migrate/test to green and commit. Budget ~15 min codex exec + 5 min orchestrator verification per slice.
+
+### Known landmines for future-me
+
+- **Codex CLI quirks** — `codex exec --full-auto` cannot commit inside its sandbox (`Operation not permitted` on `.git/index.lock`) and cannot reach `localhost:5432` (`SocketException 13: Permission denied`). Plan for orchestrator to run `dotnet ef database update` + `dotnet test` + `git commit` itself.
+- **`Microsoft.EntityFrameworkCore.Design` must be on the Api startup project**, not Infrastructure — `dotnet ef` CLI looks for it there. Codex missed this; future briefs should mention it explicitly.
+- **`dotnet-ef` global tool** lands at `~/.dotnet/tools`; PATH doesn't auto-update on install — use `export PATH="$PATH:/Users/yklau/.dotnet/tools"` for the current shell.
+- **Explicit snake_case column mapping** was chosen over `UseSnakeCaseNamingConvention()` due to an EF assembly conflict Codex hit. If adding another entity, check whether the convention package works now before duplicating explicit mappings.
+- **`.env` load for `dotnet ef`** — `set -a && source .env && set +a` exports vars into the current shell so `DesignTimeTrafficMonitorDbContextFactory` resolves `ConnectionStrings__Postgres`.
+
+### Usage note
+
+Session ended quickly on request (extra-usage alert). No pending work, no uncommitted state beyond harness drift. Safe cold-start.
