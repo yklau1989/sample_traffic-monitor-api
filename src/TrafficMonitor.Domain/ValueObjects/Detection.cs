@@ -1,12 +1,35 @@
 namespace TrafficMonitor.Domain.ValueObjects;
 
-public record Detection(string Label, double Confidence, BoundingBox BoundingBox)
+public class Detection : IEquatable<Detection>
 {
-    public string Label { get; init; } = ValidateLabel(Label);
+    public string Label { get; private init; } = string.Empty;
 
-    public double Confidence { get; init; } = ValidateConfidence(Confidence);
+    public double Confidence { get; private init; }
 
-    public BoundingBox BoundingBox { get; init; } = ValidateBoundingBox(BoundingBox);
+    public BoundingBox BoundingBox { get; private init; } = default!;
+
+    private Detection()
+    {
+        Label = string.Empty;
+        BoundingBox = default!;
+    }
+
+    public Detection(string label, double confidence, BoundingBox boundingBox)
+    {
+        Label = ValidateLabel(label);
+        Confidence = ValidateConfidence(confidence);
+        BoundingBox = ValidateBoundingBox(boundingBox);
+    }
+
+    public bool Equals(Detection? other) =>
+        other is not null
+        && Label == other.Label
+        && Confidence.Equals(other.Confidence)
+        && EqualityComparer<BoundingBox>.Default.Equals(BoundingBox, other.BoundingBox);
+
+    public override bool Equals(object? obj) => Equals(obj as Detection);
+
+    public override int GetHashCode() => HashCode.Combine(Label, Confidence, BoundingBox);
 
     private static string ValidateLabel(string label)
     {
