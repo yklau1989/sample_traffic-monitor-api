@@ -7,7 +7,7 @@ set -euo pipefail
 
 cmd=$(jq -r '.tool_input.command // empty')
 
-if printf '%s' "$cmd" | grep -qE '(OPENAI_API_KEY=[A-Za-z0-9]|codex[[:space:]]+login[[:space:]]+--api-key([[:space:]]+[A-Za-z0-9]|=[A-Za-z0-9]))'; then
+if printf '%s' "$cmd" | grep -qE '(OPENAI_API_KEY=[^[:space:]]|codex[[:space:]]+login[[:space:]]+--api-key([[:space:]]+[^[:space:]]|=[^[:space:]]))'; then
   jq -n '{
     hookSpecificOutput: {
       hookEventName: "PreToolUse",

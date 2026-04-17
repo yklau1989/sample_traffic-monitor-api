@@ -6,7 +6,7 @@ When to **stop and ask Martin** before taking the next action. These rules exist
 
 1. **Codex usage is close to its limit.** If `/codex:setup`, `/codex:status`, or any Codex companion output mentions remaining quota, rate limiting, or a "close to limit" warning, stop. Do not start a new `/codex:rescue`, `/codex:review`, or `/codex:adversarial-review` run until Martin confirms. **If quota is fully exhausted: we wait.** Do not switch Codex to API-key mode to keep going (see "Codex auth mode" below).
 2. **Codex plugin / CLI is unreachable.** If `/codex:setup` reports `ready: false`, `auth.loggedIn: false`, or a `codex-companion.mjs` call errors out with auth / socket / transport failures, stop. Do not fall back to writing the implementation yourself.
-3. **Any Docker or Docker Compose problem** while working on a non-infra task. Examples: `docker compose up` fails, a container won't become healthy, a volume won't mount, a port is already bound, a build cache corruption. Stop the current task and surface the docker failure before continuing.
+3. **Any Docker, Docker Compose, Dockerfile, or CI problem — regardless of what task you're on.** Examples: `docker compose up` fails, a container won't become healthy, a volume won't mount, a port is already bound, a build cache corruption, a Dockerfile layer fails to build, a GitHub Actions workflow fails. Stop the current task and surface the failure before continuing — do not "work around it" by editing unrelated files. This applies whether you're on an infra task or any other task: infra problems always escalate first, even when infra itself is the target.
 
 ## Codex auth mode — ChatGPT subscription only
 
