@@ -35,3 +35,40 @@ Used the new codex-first workflow (rules + hooks + agent rewrite in #8) to deliv
 ## Reviewer verdict
 
 _Pending — Martin decides whether to run the `reviewer` agent on this pilot or merge directly given the scope._
+
+---
+
+## Session handoff — 2026-04-17
+
+### Where things stand
+
+- **PR #9** open (`feature/8-codex-first-workflow` → `main`): rules + agents + hooks. Awaiting merge. **Start the next session here** — nothing else can land on `main` cleanly until this merges.
+- **Branch `feature/10-domain-enums-pilot`** pushed to origin, branches from `feature/8-codex-first-workflow`'s tip. One commit on top (`24b1124`). **No PR opened, no comment on issue #10 yet** — intentional, so Martin could eyeball the pilot first.
+- **Issue #10** open, uncommented. Closing comment + PR should come after #9 merges and this branch is rebased onto the new `main`.
+- Repo tree at session end: `src/TrafficMonitor.Domain/Enums/{EventType,Severity}.cs` live, `Class1.cs` gone, `dotnet build` green.
+
+### What this session did
+
+1. Landed the codex-first workflow (#8): `escalation.md` (quota / auth / 2-pass budget rules), `backend-dev` + `frontend-dev` agent rewrites (no self-coding), `.claude/hooks/*.sh` + `settings.json` (API-key guard + SessionEnd `dotnet build`). Five commits on `feature/8-codex-first-workflow`, pushed, PR #9 opened.
+2. Ran the first Codex-plugin pilot (#10): added two Domain enums via `/codex:rescue`. One orchestration fix needed (see landmines). Pass 1 of 2 used. Build clean.
+3. Captured two project-memory feedback entries: usage reporting + Codex iteration budget + Codex auth mode (already saved on disk under `~/.claude/projects/.../memory/`).
+
+### Open when next session starts — in order
+
+1. **Review + merge PR #9** (rules/hooks). Run the `reviewer` agent if you want a second pass; nothing on `main` requires it strictly.
+2. **Rebase `feature/10-domain-enums-pilot` onto new `main`.** Should be conflict-free — #10 only touches `src/TrafficMonitor.Domain/Enums/*` and `docs/logs/001-010/010-reasoning.md`, no overlap with #8's `.claude/**` files.
+3. **Comment on #10 + open PR**, then decide on reviewer gate.
+4. **Open the next persistence-slice issue** (value objects + `TrafficEvent` entity, still Domain-only, no EF). That's the second sanity check before committing to EF/migration work.
+
+### Landmines for future-me
+
+- **Codex plugin sandbox is read-only by default.** Use `--write` on the companion `task` subcommand when Codex must apply a patch. `backend-dev.md` should be updated to reference this the first time we hit it in a real slice (deferred now to avoid churn).
+- **`--resume` inherits the original thread's sandbox.** If Pass 1 can't write, do not `--resume`; start `--fresh --write`.
+- **PR numbering ate issue slots.** #8 = original issue, #9 = PR for #8, #10 = pilot issue. Check `gh issue view <n>` vs `gh pr view <n>` before assuming.
+- **`.claude/settings.local.json`** continues to show as modified — harness drift, do not commit.
+- **macOS locale on the build host** prints build results in Japanese (`ビルドに成功しました。`). Harmless but confusing on first read.
+
+### Usage at handoff
+
+- Claude: ~85% context used (started ~68% for this session).
+- Codex: 4 jobs / ~63s total runtime this session. No limit warnings. Login still `authMethod: "chatgpt"`.
