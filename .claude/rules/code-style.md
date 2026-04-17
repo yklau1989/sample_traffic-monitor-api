@@ -42,6 +42,14 @@ Hard rules for C# / .NET code in this repo. Skills (`csharp-clean-architecture`,
 - One public type per file, file named after the type.
 - Method length: no hard cap, but if a method grows past ~40 lines or three levels of nesting, extract.
 - Prefer early returns over nested `if`/`else`.
+- **Member order inside a type.** Readers should see what state a type carries before how it is built. Order is:
+  1. Constants (`const`) and `static readonly` fields.
+  2. Instance fields — private first (backing fields for the properties below).
+  3. Properties — **before** constructors.
+  4. Constructors — private / parameterless (e.g. the EF ctor) first, then public.
+  5. Methods — public surface first, private helpers at the bottom.
+
+  Codex's default places properties *after* constructors; include this ordering in every Codex brief so the first pass gets it right instead of needing a re-review. Auto-fails review if violated.
 
 ## What auto-fails review
 
@@ -51,3 +59,4 @@ Hard rules for C# / .NET code in this repo. Skills (`csharp-clean-architecture`,
 - A DTO declared as a `class` with settable properties.
 - Raw SQL with string interpolation of user input.
 - Comments that explain *what* the code does.
+- Member order with properties below constructors (see `Layout` — properties come first).
