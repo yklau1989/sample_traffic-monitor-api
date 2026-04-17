@@ -7,6 +7,22 @@ public class TrafficEvent
 {
     private readonly List<Detection> _detections;
 
+    public int Id { get; private set; }
+
+    public Guid EventId { get; private set; }
+
+    public EventType EventType { get; private set; }
+
+    public Severity Severity { get; private set; }
+
+    public string CameraId { get; private set; } = string.Empty;
+
+    public DateTime OccurredAt { get; private set; }
+
+    public DateTime IngestedAt { get; private set; }
+
+    public IReadOnlyCollection<Detection> Detections => _detections;
+
     private TrafficEvent()
     {
         _detections = new();
@@ -68,20 +84,4 @@ public class TrafficEvent
         IngestedAt = ingestedAt;
         _detections.AddRange(detections);
     }
-
-    public int Id { get; private set; }
-
-    public Guid EventId { get; private set; }
-
-    public EventType EventType { get; private set; }
-
-    public Severity Severity { get; private set; }
-
-    public string CameraId { get; private set; } = string.Empty;
-
-    public DateTime OccurredAt { get; private set; }
-
-    public DateTime IngestedAt { get; private set; }
-
-    public IReadOnlyCollection<Detection> Detections => _detections;
 }
