@@ -1,4 +1,5 @@
 using TrafficMonitor.Application.Commands.IngestTrafficEvent;
+using TrafficMonitor.Application.Queries.ListTrafficEvents;
 using TrafficMonitor.Application.Repositories;
 using TrafficMonitor.Domain.Entities;
 using TrafficMonitor.Domain.Enums;
@@ -144,6 +145,13 @@ public class IngestTrafficEventHandlerTests
         {
             _store.Add(trafficEvent);
             return Task.CompletedTask;
+        }
+
+        public Task<PagedResult<EventListItemDto>> ListAsync(
+            ListTrafficEventsQuery query,
+            CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
         }
 
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken)
