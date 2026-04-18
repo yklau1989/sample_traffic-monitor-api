@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Scalar.AspNetCore;
 using TrafficMonitor.Api.Middleware;
 using TrafficMonitor.Application.Commands.IngestTrafficEvent;
 using TrafficMonitor.Application.Queries.ListTrafficEvents;
@@ -29,6 +30,7 @@ app.UseStatusCodePages();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.MapControllers();
