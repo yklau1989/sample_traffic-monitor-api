@@ -86,15 +86,14 @@ docs/
 ├── api-reference.md            # Endpoint contracts, DTOs, status codes
 ├── deployment.md               # Docker Compose, env vars, operational notes
 ├── logs/                       # Reasoning logs — AI tool usage artifact
-│   ├── 001-010/                # Phase 1: Foundation
-│   ├── 011-020/                # Phase 2–3: Core + Real-Time
-│   └── 021-030/                # Phase 4: Polish
+│   ├── 001-100/                # Issues 1–100
+│   └── 101-200/                # Issues 101–200
 └── decisions/                  # Architecture Decision Records (optional)
 ```
 
 **Evaluator-facing docs** (`architecture.md`, `api-reference.md`, `deployment.md`) are hand-curated deliverables — keep them current.
 
-**Reasoning logs** (`docs/logs/{range}/{issue-number}-reasoning.md`) — every agent writes one before completing work. Include: what was decided, alternatives considered, why this approach won, and what's still open/next. These are the AI tool usage artifact AND the cross-session handoff — the next session reads the latest log to pick up where the last one left off. Git log + open issues cover the rest.
+**Reasoning logs** (`docs/logs/{range}/{issue-number}-reasoning.md`, e.g. `docs/logs/001-100/011-reasoning.md` — zero-pad issue numbers to three digits) — every agent writes one before completing work. Capture Martin's directives verbatim alongside your commentary, the decision, alternatives considered, trade-offs, and status/next. See `.claude/rules/documentation.md` for the full required-sections list. These are the AI tool usage artifact AND the cross-session handoff — the next session reads the latest log to pick up where the last one left off. Git log + open issues cover the rest.
 
 ## Hybrid Workflow (Claude + Codex)
 
