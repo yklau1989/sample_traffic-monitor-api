@@ -188,3 +188,35 @@ Replaced `OwnsMany(...).ToJson()` with a `ValueConverter<List<Detection>, string
 
 **Iteration budget spent (Option B resolution):** 2 of 2.
 
+---
+
+## Reviewer verdict — Option B (PR #14) — 2026-04-18
+
+### Verdict
+
+APPROVE WITH COMMENTS (non-blocking).
+
+### Findings
+
+- `src/TrafficMonitor.Infrastructure/Repositories/TrafficEventRepository.cs:10` — **nit** — `_dbContext` field is missing `readonly`. Set once in constructor, never reassigned. Add `readonly` before merge or carry into the Application handler slice.
+- `src/TrafficMonitor.Infrastructure/Persistence/Configurations/TrafficEventConfiguration.cs` (`ValueComparer` clone lambda) — **nit** — the clone expression uses `!` null-forgiving suppressor on a round-tripped deserialise call. Provably safe (data was just serialised on the line above) but inconsistent with the `?? new List<Detection>()` fallback used in the converter's read lambda. Replace `!` with `?? new List<Detection>()` for consistency with `.claude/rules/code-style.md`.
+- PR body and commit message reference `GetByEventIdAsync`; actual interface method is `FindByEventIdAsync`. Informational only — code compiles and tests pass; discrepancy is only in prose.
+
+### Specific questions confirmed clean
+
+- `[JsonConstructor]` binds correctly to validated public ctors on `Detection` and `BoundingBox`; the private parameterless ctors are reserved for EF.
+- `builder.Ignore(e => e.Detections)` placement is valid — EF resolves `Ignore` semantics after the full `Configure` method executes, so ordering within the method is irrelevant.
+- `ValueComparer` string-equality is correct for this aggregate — detections are write-once-with-the-event, so the theoretical "reorder → falsely unequal" risk cannot materialise.
+- `TrafficMonitorDbContextFactory` reads from `Environment.GetEnvironmentVariable("ConnectionStrings__Postgres")` with a throw-on-missing fallback. No hardcoded connection string, no secrets in the diff.
+- `DependencyInjection.AddInfrastructure` uses `configuration.GetConnectionString("Postgres") ?? throw`. Fails loudly on missing config.
+- No internal `int Id` leaks via the repository interface (returns domain entity, not raw ID).
+- No `IQueryable` leaks — `FindByEventIdAsync` returns `Task<TrafficEvent?>`.
+- No `FromSqlRaw`, no string-interpolated SQL, no `TODO`/`FIXME`.
+
+### Confidence
+
+High. All implementation files read. Build (0/0) and tests (30/30) independently verified by the orchestrator. Migration applied cleanly to compose Postgres with `\d traffic_events` showing `detections jsonb`, `ix_traffic_events_event_id` UNIQUE, and snake_case column names throughout.
+
+### Recommendation to Martin
+
+**Ship it.** The two nits are non-blocking and can be carried into the Application handler slice brief as a one-liner "add `readonly` + replace `!` with `??`" fix. Neither affects correctness, the migration, or the JSONB guarantee.

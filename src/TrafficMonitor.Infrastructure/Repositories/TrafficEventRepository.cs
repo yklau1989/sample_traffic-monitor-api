@@ -7,7 +7,7 @@ namespace TrafficMonitor.Infrastructure.Repositories;
 
 public class TrafficEventRepository : ITrafficEventRepository
 {
-    private TrafficMonitorDbContext _dbContext;
+    private readonly TrafficMonitorDbContext _dbContext;
 
     public TrafficEventRepository(TrafficMonitorDbContext dbContext)
     {

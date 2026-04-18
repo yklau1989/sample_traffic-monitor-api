@@ -25,7 +25,7 @@ public class TrafficEventConfiguration : IEntityTypeConfiguration<TrafficEvent>
             (a, b) => JsonSerializer.Serialize(a, jsonOptions) == JsonSerializer.Serialize(b, jsonOptions),
             detections => JsonSerializer.Serialize(detections, jsonOptions).GetHashCode(),
             detections => JsonSerializer.Deserialize<List<Detection>>(
-                JsonSerializer.Serialize(detections, jsonOptions), jsonOptions)!);
+                JsonSerializer.Serialize(detections, jsonOptions), jsonOptions) ?? new List<Detection>());
 
         builder.HasKey(trafficEvent => trafficEvent.Id);
         builder.Ignore(trafficEvent => trafficEvent.Detections);
