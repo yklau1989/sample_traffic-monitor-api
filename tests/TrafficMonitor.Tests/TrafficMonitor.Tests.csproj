@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\TrafficMonitor.Domain\TrafficMonitor.Domain.csproj" />
+    <ProjectReference Include="..\..\src\TrafficMonitor.Application\TrafficMonitor.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>
