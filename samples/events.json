@@ -1,0 +1,302 @@
+[
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000001",
+    "eventType": "Debris",
+    "severity": "Low",
+    "cameraId": "cam-101",
+    "occurredAt": "2026-04-17T18:35:55Z",
+    "detections": [
+      { "label": "debris", "confidence": 0.71, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000002",
+    "eventType": "StoppedVehicle",
+    "severity": "Medium",
+    "cameraId": "cam-102",
+    "occurredAt": "2026-04-17T19:23:55Z",
+    "detections": [
+      { "label": "car", "confidence": 0.72, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000003",
+    "eventType": "Congestion",
+    "severity": "High",
+    "cameraId": "cam-103",
+    "occurredAt": "2026-04-17T20:11:55Z",
+    "detections": [
+      { "label": "car", "confidence": 0.73, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000004",
+    "eventType": "Accident",
+    "severity": "Critical",
+    "cameraId": "cam-104",
+    "occurredAt": "2026-04-17T20:59:55Z",
+    "detections": [
+      { "label": "car", "confidence": 0.74, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000005",
+    "eventType": "WrongWayDriver",
+    "severity": "Low",
+    "cameraId": "cam-105",
+    "occurredAt": "2026-04-17T21:47:55Z",
+    "detections": [
+      { "label": "car", "confidence": 0.75, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000006",
+    "eventType": "Pedestrian",
+    "severity": "Medium",
+    "cameraId": "cam-101",
+    "occurredAt": "2026-04-17T22:35:55Z",
+    "detections": [
+      { "label": "person", "confidence": 0.76, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000007",
+    "eventType": "Debris",
+    "severity": "High",
+    "cameraId": "cam-102",
+    "occurredAt": "2026-04-17T23:23:55Z",
+    "detections": [
+      { "label": "debris", "confidence": 0.77, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000008",
+    "eventType": "StoppedVehicle",
+    "severity": "Critical",
+    "cameraId": "cam-103",
+    "occurredAt": "2026-04-18T00:11:55Z",
+    "detections": [
+      { "label": "car", "confidence": 0.78, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000009",
+    "eventType": "Congestion",
+    "severity": "Low",
+    "cameraId": "cam-104",
+    "occurredAt": "2026-04-18T00:59:55Z",
+    "detections": [
+      { "label": "car", "confidence": 0.79, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000010",
+    "eventType": "Accident",
+    "severity": "Medium",
+    "cameraId": "cam-105",
+    "occurredAt": "2026-04-18T01:47:55Z",
+    "detections": [
+      { "label": "car", "confidence": 0.80, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000011",
+    "eventType": "WrongWayDriver",
+    "severity": "High",
+    "cameraId": "cam-101",
+    "occurredAt": "2026-04-18T02:35:55Z",
+    "detections": [
+      { "label": "car", "confidence": 0.81, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000012",
+    "eventType": "Pedestrian",
+    "severity": "Critical",
+    "cameraId": "cam-102",
+    "occurredAt": "2026-04-18T03:23:55Z",
+    "detections": [
+      { "label": "person", "confidence": 0.82, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000013",
+    "eventType": "Debris",
+    "severity": "Low",
+    "cameraId": "cam-103",
+    "occurredAt": "2026-04-18T04:11:55Z",
+    "detections": [
+      { "label": "debris", "confidence": 0.83, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000014",
+    "eventType": "StoppedVehicle",
+    "severity": "Medium",
+    "cameraId": "cam-104",
+    "occurredAt": "2026-04-18T04:59:55Z",
+    "detections": [
+      { "label": "car", "confidence": 0.84, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000015",
+    "eventType": "Congestion",
+    "severity": "High",
+    "cameraId": "cam-105",
+    "occurredAt": "2026-04-18T05:47:55Z",
+    "detections": [
+      { "label": "car", "confidence": 0.85, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000016",
+    "eventType": "Accident",
+    "severity": "Critical",
+    "cameraId": "cam-101",
+    "occurredAt": "2026-04-18T06:35:55Z",
+    "detections": [
+      { "label": "car", "confidence": 0.86, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000017",
+    "eventType": "WrongWayDriver",
+    "severity": "Low",
+    "cameraId": "cam-102",
+    "occurredAt": "2026-04-18T07:23:55Z",
+    "detections": [
+      { "label": "car", "confidence": 0.87, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000018",
+    "eventType": "Pedestrian",
+    "severity": "Medium",
+    "cameraId": "cam-103",
+    "occurredAt": "2026-04-18T08:11:55Z",
+    "detections": [
+      { "label": "person", "confidence": 0.88, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000019",
+    "eventType": "Debris",
+    "severity": "High",
+    "cameraId": "cam-104",
+    "occurredAt": "2026-04-18T08:59:55Z",
+    "detections": [
+      { "label": "debris", "confidence": 0.89, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000020",
+    "eventType": "StoppedVehicle",
+    "severity": "Critical",
+    "cameraId": "cam-105",
+    "occurredAt": "2026-04-18T09:47:55Z",
+    "detections": [
+      { "label": "car", "confidence": 0.90, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000021",
+    "eventType": "Congestion",
+    "severity": "Low",
+    "cameraId": "cam-101",
+    "occurredAt": "2026-04-18T10:35:55Z",
+    "detections": [
+      { "label": "car", "confidence": 0.91, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000022",
+    "eventType": "Accident",
+    "severity": "Medium",
+    "cameraId": "cam-102",
+    "occurredAt": "2026-04-18T11:23:55Z",
+    "detections": [
+      { "label": "car", "confidence": 0.92, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000023",
+    "eventType": "WrongWayDriver",
+    "severity": "High",
+    "cameraId": "cam-103",
+    "occurredAt": "2026-04-18T12:11:55Z",
+    "detections": [
+      { "label": "car", "confidence": 0.93, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000024",
+    "eventType": "Pedestrian",
+    "severity": "Critical",
+    "cameraId": "cam-104",
+    "occurredAt": "2026-04-18T12:59:55Z",
+    "detections": [
+      { "label": "person", "confidence": 0.94, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000025",
+    "eventType": "Debris",
+    "severity": "Low",
+    "cameraId": "cam-105",
+    "occurredAt": "2026-04-18T13:47:55Z",
+    "detections": [
+      { "label": "debris", "confidence": 0.95, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000026",
+    "eventType": "StoppedVehicle",
+    "severity": "Medium",
+    "cameraId": "cam-101",
+    "occurredAt": "2026-04-18T14:35:55Z",
+    "detections": [
+      { "label": "car", "confidence": 0.96, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000027",
+    "eventType": "Congestion",
+    "severity": "High",
+    "cameraId": "cam-102",
+    "occurredAt": "2026-04-18T15:23:55Z",
+    "detections": [
+      { "label": "car", "confidence": 0.97, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000028",
+    "eventType": "Accident",
+    "severity": "Critical",
+    "cameraId": "cam-103",
+    "occurredAt": "2026-04-18T16:11:55Z",
+    "detections": [
+      { "label": "car", "confidence": 0.98, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000029",
+    "eventType": "WrongWayDriver",
+    "severity": "Low",
+    "cameraId": "cam-104",
+    "occurredAt": "2026-04-18T16:59:55Z",
+    "detections": [
+      { "label": "car", "confidence": 0.98, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  },
+  {
+    "eventId": "b2222222-0000-0000-0000-000000000030",
+    "eventType": "Pedestrian",
+    "severity": "Medium",
+    "cameraId": "cam-105",
+    "occurredAt": "2026-04-18T17:47:55Z",
+    "detections": [
+      { "label": "person", "confidence": 0.98, "boundingBox": { "x": 200, "y": 380, "width": 180, "height": 130 } }
+    ]
+  }
+]
