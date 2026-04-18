@@ -43,3 +43,21 @@ Next issues: GET endpoints (#20, #22), fake event generator (#27), compose wirin
 > "You two are using so many tokens for my 'interview question' to do things like [10 const strings for RFC URLs / titles / extension names]"
 >
 > "just merge them and be sure that we are heading to finish a human(me) testable api so that I can submit"
+
+## Reviewer verdict
+
+**Approve with nits.**
+
+Build: 0 errors, 0 warnings. Tests: 41/41 green. `.claude/settings.local.json` not staged.
+
+**Conventions:** Clean Architecture boundaries respected — no `IQueryable` leak, no `DbContext` in Application/Api. `EventsController` is lean (36 lines). Member order in `GlobalExceptionHandler` is correct (consts → fields → constructor → methods). The new `ArgumentException → 422` mapping correctly uses inline strings rather than new consts, honouring Martin's directive from the conversation trail. `TrafficEventInput` and `DetectionInput` are positional `record`s with parameter-level `[Required]` — the .NET 10 workaround is correctly applied and documented.
+
+**API conventions:** POST returns 201 + `Location` for new events, 200 + `Location` for duplicates (verified by integration test). `ArgumentException` → 422, model-binding failures → 400, unhandled → 500. All per `api-conventions.md`.
+
+**Nits (non-blocking):**
+
+1. `EventsControllerTests.cs` line 27-28: hardcoded `Password=postgres` in `Environment.SetEnvironmentVariable`. The stub replaces `ITrafficEventRepository` so Postgres is never contacted, but the credential still appears in source. Pattern inherited from #16; consistent at least. Low risk for a take-home — no action required now, but note for any future secrets audit.
+
+2. `GlobalExceptionHandler.cs` still carries 9 `const` strings that predate this PR (from #16). This PR removes one (`BadRequestTitle`) and uses inline strings for the new 422 path — correct direction. The residual consts are out of this PR's scope.
+
+**Acceptance criteria:** All four criteria met — 201 + Location (new), 200 + Location (duplicate), 400 (shape), 422 (domain rule). Reasoning log has Decision / Options / Trade-offs / Status-Next with both Codex job IDs recorded.
