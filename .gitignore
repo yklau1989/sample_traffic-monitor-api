@@ -62,3 +62,6 @@ nunit-*.xml
 # output, not our docs/logs/ directory. Un-ignore explicitly.
 !docs/logs/
 !docs/logs/**
+
+# Local-only Claude app prompt drafts — never committed.
+docs/evaluator/

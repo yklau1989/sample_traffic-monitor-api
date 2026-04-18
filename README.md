@@ -1,67 +1,187 @@
 # Traffic Monitor API
 
-Traffic incident monitoring API for a highway AI video system. Ingests event detections, exposes a filterable query API for an operator dashboard, and streams real-time updates via Server-Sent Events.
+Traffic incident monitoring API for a highway AI video system. Ingests detection events, exposes a filterable query API for an operator dashboard, and will stream real-time updates via Server-Sent Events.
 
 Built with **.NET 10 / ASP.NET Core / EF Core / PostgreSQL**, structured around a light Clean Architecture layout. See [`docs/architecture.md`](docs/architecture.md) for the design rationale.
 
-## Quick start (Docker)
+---
+
+## Getting started
+
+This is the step-by-step setup path a new contributor takes after `git clone`. Follow in order — each step checks a prerequisite or produces something the next step depends on.
+
+### Prerequisites — install these once
+
+You need three things on your machine before any of this works. The order doesn't matter here; verify each with the given command.
+
+**Step A — Docker Desktop**
+
+Postgres runs in a container, so you don't pollute your machine with a database install.
 
 ```bash
-cp .env.example .env              # fill in real values if you care; defaults work for local
+docker compose version
+# → Docker Compose version v2.x.x
+```
+
+If this fails, install Docker Desktop from https://www.docker.com/products/docker-desktop/.
+
+**Step B — .NET 10 SDK**
+
+Needed to build and run the API.
+
+```bash
+dotnet --version
+# → 10.x.xxx
+```
+
+If this fails or shows an older version, install the .NET 10 SDK from https://dotnet.microsoft.com/download/dotnet/10.0.
+
+**Step C — EF Core CLI (global .NET tool)**
+
+Needed to apply the database migrations.
+
+```bash
+dotnet tool install --global dotnet-ef
+dotnet ef --version
+# → 10.x.x
+```
+
+If `dotnet-ef` is already installed, use `dotnet tool update --global dotnet-ef` to make sure it matches .NET 10.
+
+---
+
+### Setup — run these in order
+
+**Step 1 — Clone and enter the repo**
+
+```bash
+git clone https://github.com/yklau1989/sample_traffic-monitor-api.git
+cd sample_traffic-monitor-api
+```
+
+**Step 2 — Create your `.env`**
+
+The repo ships `.env.example` as a template. The defaults work out-of-the-box for local development — you only need to change values if you plan to expose this somewhere.
+
+```bash
+cp .env.example .env
+```
+
+**Step 3 — Start Postgres**
+
+Bring up *only* the Postgres container from `docker-compose.yml`. We leave the API container out of this path so you can run the API locally (hot reload, attach debugger, etc.).
+
+```bash
+docker compose up -d postgres
+```
+
+Wait for the healthcheck to pass — a few seconds. Verify:
+
+```bash
+docker compose ps postgres
+# STATUS should show "healthy"
+```
+
+**Step 4 — Apply database migrations**
+
+This creates the `traffic_events` table, the unique index on `event_id` (how idempotency works), and the JSONB `detections` column.
+
+```bash
+dotnet ef database update \
+  --project src/TrafficMonitor.Infrastructure \
+  --startup-project src/TrafficMonitor.Api
+```
+
+You should see `Done.` at the end.
+
+**Step 5 — Point the API at your local Postgres**
+
+The API reads its connection string from the `ConnectionStrings__Postgres` environment variable. Export it in the shell you're about to run the API from (the password must match what's in your `.env`):
+
+```bash
+export ConnectionStrings__Postgres="Host=localhost;Port=5432;Database=traffic_monitor;Username=traffic;Password=change-me-in-env"
+```
+
+If you changed `POSTGRES_PASSWORD` in `.env`, match it here.
+
+**Step 6 — Run the API**
+
+```bash
+dotnet run --project src/TrafficMonitor.Api
+```
+
+Or in VS Code: press **F5**. The repo ships a `.vscode/launch.json` that builds the project, sets the same `ConnectionStrings__Postgres` as Step 5, and auto-opens your browser to the Scalar UI when the server is ready. Breakpoints work.
+
+The API listens on `http://localhost:5124` (HTTP) and `https://localhost:7168` (HTTPS, when launched via the `https` profile) — ports set in `src/TrafficMonitor.Api/Properties/launchSettings.json`. Leave the terminal open — `Ctrl+C` stops it.
+
+**Step 7 — Verify it's alive**
+
+From a different terminal:
+
+```bash
+curl -sS http://localhost:5124/api/events
+# → {"items":[],"total":0,"page":1,"pageSize":50}
+```
+
+An empty list is the happy path — it means the API is up, Postgres is reachable, and the schema is there.
+
+**Step 8 — Explore the API**
+
+Two options, Development mode only:
+
+**(a) Scalar UI — browse the API interactively in a browser:**
+
+```
+http://localhost:5124/scalar/v1
+https://localhost:7168/scalar/v1
+```
+
+Scalar renders the OpenAPI document as an interactive reference and lets you try endpoints from the browser. If you launched via VS Code F5, this tab opens automatically.
+
+**(b) Postman — import the OpenAPI spec:**
+
+```
+http://localhost:5124/openapi/v1.json
+```
+
+In Postman: **File → Import → Link**, paste the URL above. Postman generates a collection with every endpoint pre-filled.
+
+A sample `POST /api/events` body to try:
+
+```json
+{
+  "eventId": "11111111-1111-1111-1111-111111111111",
+  "eventType": "Debris",
+  "severity": "High",
+  "cameraId": "cam-101",
+  "occurredAt": "2026-04-18T10:30:00Z",
+  "detections": [
+    {
+      "label": "debris",
+      "confidence": 0.91,
+      "boundingBox": { "x": 120, "y": 240, "width": 80, "height": 60 }
+    }
+  ]
+}
+```
+
+Then `GET /api/events` will show the event. POSTing the same `eventId` again returns `200 OK` instead of `201 Created` — idempotency working.
+
+---
+
+## All-in-Docker alternative
+
+If you don't care about debugging and just want the whole stack running (for an evaluator, say), skip the local-dev path entirely:
+
+```bash
 docker compose up --build
 ```
 
-Services:
+The API is then at `http://localhost:8080` (not 5124 — that port is only for local `dotnet run`). Postgres is on `:5432` as before. Tear everything down with `docker compose down -v` (the `-v` wipes the DB volume).
 
-| Service  | Host port | Purpose                                       |
-|----------|-----------|-----------------------------------------------|
-| `api`    | `8080`    | ASP.NET Core Web API                          |
-| `postgres` | `5432`  | PostgreSQL 16                                 |
+Why host port `8080` inside Docker, not `5000`? macOS Control Center (AirPlay Receiver) binds `:5000` and can't be reliably freed.
 
-Verify it's up:
-
-```bash
-curl -sS -o /dev/null -w "%{http_code}\n" http://localhost:8080/api/events
-# → any valid HTTP response (endpoints are being added issue-by-issue)
-```
-
-Tear down and wipe the DB:
-
-```bash
-docker compose down -v
-```
-
-### Why port 8080, not 5000?
-
-macOS Control Center (AirPlay Receiver) binds `:5000` and can't be reliably freed. `:8080` is the host-side port; the container internally still listens on `:8080` (the .NET image default).
-
-## Local dev without Docker
-
-Requires the .NET 10 SDK installed locally and a Postgres reachable at `localhost:5432`.
-
-```bash
-docker compose up -d postgres      # start only the DB
-export ConnectionStrings__Postgres="Host=localhost;Port=5432;Database=traffic_monitor;Username=traffic;Password=change-me-in-env"
-dotnet run --project src/TrafficMonitor.Api
-# API at http://localhost:5000
-```
-
-Swagger is mapped under `/openapi` in Development. The frontend (once implemented) is served as static files from `/`.
-
-## Project structure
-
-```
-src/
-  TrafficMonitor.Domain/          # Entities, value objects, enums — no external dependencies
-  TrafficMonitor.Application/     # Commands, queries, handlers, DTOs, repository interfaces
-  TrafficMonitor.Infrastructure/  # EF Core DbContext, repository implementations, migrations
-  TrafficMonitor.Api/             # Controllers, middleware, SSE, DI, composition root
-tests/
-  TrafficMonitor.Tests/           # xUnit — unit + integration tests
-frontend/                         # Static HTML/JS dashboard, served by the API
-docs/                             # architecture.md, api-reference.md, deployment.md, logs/
-.claude/                          # Agent + skill definitions for the Claude Code workflow
-```
+---
 
 ## Running tests
 
@@ -69,15 +189,42 @@ docs/                             # architecture.md, api-reference.md, deploymen
 dotnet test
 ```
 
-Integration tests spin up a real Postgres via the compose stack or Testcontainers — not mocks. See [`docs/architecture.md`](docs/architecture.md) for the rationale.
+The test project (`tests/TrafficMonitor.Tests/`) covers Domain invariants, Application handlers, and controller-level tests via `WebApplicationFactory`. A full integration-test harness backed by Testcontainers Postgres is planned — tracked in issue #18.
+
+---
+
+## Project layout
+
+```
+src/
+  TrafficMonitor.Domain/          # Entities, value objects, enums — no external dependencies
+  TrafficMonitor.Application/     # Commands, queries, handlers, DTOs, repository interfaces
+  TrafficMonitor.Infrastructure/  # EF Core DbContext, repository, migrations, JSONB config
+  TrafficMonitor.Api/             # Controllers, middleware, DI composition root
+tests/
+  TrafficMonitor.Tests/           # xUnit — Domain, Application, Api folders
+frontend/                         # Static HTML/JS dashboard (planned)
+docs/
+  architecture.md                 # Design rationale, trade-offs, out-of-scope list
+  api-reference.md                # Endpoint contracts
+  deployment.md                   # Operational notes
+  design/                         # Evaluator-facing artifacts (decks, SVG diagram)
+  logs/                           # Reasoning logs — one per issue
+.claude/                          # Agent + skill definitions for the Claude Code workflow
+```
+
+---
 
 ## Further reading
 
-- [`CLAUDE.md`](CLAUDE.md) — conventions, Key Design Rules, session-resume protocol
-- [`docs/architecture.md`](docs/architecture.md) — layers, CQRS, persistence, real-time design + trade-offs
-- [`docs/api-reference.md`](docs/api-reference.md) — endpoint contracts
+- [`CLAUDE.md`](CLAUDE.md) — project conventions, Key Design Rules, session-resume protocol
+- [`docs/architecture.md`](docs/architecture.md) — layer design, CQRS, persistence, real-time, trade-offs
+- [`docs/api-reference.md`](docs/api-reference.md) — endpoint contracts and status codes
 - [`docs/deployment.md`](docs/deployment.md) — operational notes
+- [`docs/design/`](docs/design/) — evaluator decks + architecture diagram
+
+---
 
 ## Status
 
-This is an interview take-home under active construction. See the [open issues](../../issues) for current scope and progress.
+Interview take-home under active construction. See the [open issues](../../issues) for current scope and progress.
