@@ -76,3 +76,52 @@ Two backend-dev spawns this session both stopped at the Codex handoff because th
 - `ListEventsRequest` declared as positional record in `EventsController.cs` per brief. `InvalidSortFieldException` branch added before `ArgumentException` branch per brief. `ListTrafficEventsHandler` registered scoped in `Program.cs`.
 
 **After #20 ships:** Martin reviews + approves PR; submission ready. Issues explicitly out of scope: #18, #21, #22, #23–#29, #27, #30, #31.
+
+## Reviewer verdict
+
+**Round:** 1
+
+### Build: PASS
+`dotnet build` — 0 errors, 0 warnings.
+
+### Tests: PASS
+`dotnet test` — 57/57 passed (53 pre-existing + 4 new).
+
+### Infrastructure: N/A
+
+### Conventions: PASS
+- `ListEventsRequest` is a positional `sealed record` — DTO rule satisfied.
+- `ListAsync` is `async Task`-returning with `CancellationToken` plumbed through to the handler.
+- No `.Result`, `.Wait()`, `GetAwaiter`, or `FromSqlRaw` in the new code.
+- `IQueryable` stays inside the infrastructure repository; the stub in the test file operates over `IEnumerable<TrafficEvent>` in-memory.
+- `InvalidSortFieldException` branch added **before** the `ArgumentException` branch in `GlobalExceptionHandler.cs` — ordering correct.
+- Member order in `EventsController`: fields → constructor → methods — properties before constructors not directly applicable here (no standalone properties), and the positional `ListEventsRequest` record satisfies the ordering rule.
+- No `TODO`/`FIXME` in new code.
+- No abbreviations. `ListEventsRequest`, `ListTrafficEventsHandler`, `CameraId`, etc. all fully spelled out.
+- `ListEventsRequest` in the same file as `EventsController` — the reasoning log acknowledges this deviates from "one type per file" and Martin confirmed take-home scope makes it acceptable. Accepted as-is.
+
+### Security: PASS
+- No new secrets introduced. The hardcoded Postgres connection string in `EventsControllerTests` line 34–35 (`Password=postgres`) pre-dates this PR — it was present on `main` before this branch. Not a regression.
+- No string-interpolated SQL.
+- UTC validation occurs at the controller boundary before the handler is called.
+
+### Reasoning log: PASS
+- File: `docs/logs/001-100/020-reasoning.md` — 3-digit-padded filename satisfied.
+- All required sections present: Conversation trail (includes Martin's directive verbatim about dropping #18 dependency), Decision, Options considered, Trade-offs, Status/Next.
+- Codex job ID and both orchestrator verification results recorded.
+
+### Test coverage: PASS
+Four new tests covering: happy-path paged envelope shape, severity filter narrowing (3-event seed, filter returns 2), unknown sort field → 400 with Problem Details title/detail assertions, naive `from` timestamp → 400. All acceptance-criteria paths exercised.
+
+### Acceptance: PASS
+Mapping against issue #20 acceptance criteria:
+
+1. `GET /api/events?eventType=...&severity=...&from=...&to=...&cameraId=...&sort=-occurredAt&page=1&pageSize=50` returns `{items,total,page,pageSize}` — satisfied. Controller dispatches to `ListTrafficEventsHandler`; response is `PagedResult<EventListItemDto>` with the four envelope fields.
+2. Unknown sort field → 400 Problem Details — satisfied. `InvalidSortFieldException` mapped to 400 in `GlobalExceptionHandler`; test `ListAsync_WhenSortFieldIsUnknown_Returns400ProblemDetailsAsync` asserts title and detail.
+3. UTC enforcement; naive timestamps rejected at controller boundary — satisfied. Pattern-match on `DateTimeKind != Utc` returns 400 before handler is called; test `ListAsync_WhenFromTimestampIsNotUtc_Returns400ProblemDetailsAsync` covers this.
+4. Integration test: seed 3 events, filter by `severity=high`, assert envelope shape and `total` — satisfied by `ListAsync_WhenFilteringBySeverity_ReturnsMatchingEventsAsync` (3 seeded events, 2 match High, envelope `Total=2` asserted).
+5. `docs/api-reference.md` populated — satisfied. Query params, response envelope with example, and response codes documented.
+
+### Verdict: READY FOR MARTIN
+
+All checks pass. The diff is clean and scoped to exactly the 5 files briefed, plus the reasoning log. No blockers found.
