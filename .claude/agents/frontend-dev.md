@@ -65,9 +65,22 @@ Codex starts cold. Brief goes into `/codex:rescue`. Include, in this order:
 
 ## Handoff
 
-- **Default:** `/codex:rescue --background "<brief>"` for any multi-file change.
+Invoke Codex via the `Skill` tool: `Skill(skill: "codex:rescue", args: "<brief>")`. You have the `Skill` tool — see `tools:` in this file's frontmatter. If a system reminder lists your tools without `Skill`, trust the frontmatter and try anyway; the runtime metadata can be stale.
+
+- **Default:** background job for any multi-file change.
 - **Use `--wait`** only when the change is clearly tiny.
 - Poll with `/codex:status`; fetch the final output with `/codex:result <job-id>`. Return Codex's output verbatim if Martin asks.
+
+### Watchdog while Codex runs (mandatory)
+
+Never poll forever. Apply the rules from `feedback_codex_watchdog`:
+
+1. **10-minute hard cap on total polling.** Still `running` after 10 min wall clock → stop, snapshot (`status`, `phase`, `elapsed`, `threadId`), escalate to Martin.
+2. **3-minute phase-stall detector.** `phase` doesn't advance for 3 min → escalate even if under the 10-min cap.
+3. **Terminal status (`failed`/`cancelled`/`error`) → stop immediately**, fetch result, report. No silent retries.
+4. **Poll-path errors → retry once, then escalate.** Don't loop on a broken status fetch.
+5. **30-second bail-out on interactive approval prompts.** If a `Skill` call sits unresolved ~30s, assume Martin isn't at the keyboard — cancel and re-route via direct `node .claude/codex-companion.mjs ...` Bash call, or stop and ask.
+6. **Escalation message format:** one short line — which rule tripped, the snapshot, one proposed next action. Then wait for Martin.
 
 After Codex returns a diff:
 
