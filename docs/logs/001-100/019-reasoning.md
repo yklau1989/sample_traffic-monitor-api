@@ -52,3 +52,27 @@ Open / next:
 - Pass 2: background job `b6zeu1off` — targeted fix for `EventsControllerTests.InMemoryTrafficEventRepository` missing `ListAsync` stub (Codex missed this third fake in Pass 1)
 
 Pass 2 was required because Pass 1 missed one fake repository. Pass 2 succeeded on first try.
+
+## Reviewer verdict
+
+**Verdict: READY FOR MARTIN**
+
+Review date: 2026-04-18. Reviewer: claude-sonnet-4-6.
+
+Build: PASS (0 warnings, 0 errors). Tests: PASS (53/53).
+
+All acceptance criteria met. No convention violations found. Specific checks:
+
+- All four required files present in `Application/Queries/ListTrafficEvents/`.
+- `EventListItemDto` is a positional record with `DetectionSummary` string (no raw bbox).
+- `PagedResult<T>` is a positional record with `{ Items, Total, Page, PageSize }` — camelCase on wire.
+- `ITrafficEventRepository.ListAsync` added; returns `PagedResult<EventListItemDto>`; `IQueryable<T>` stays inside the Infrastructure repository boundary.
+- Filters are AND-combined; sort supports `occurredAt` and `-occurredAt`; unknown field throws `InvalidSortFieldException`.
+- `pageSize` default 50, cap 200 enforced in both real and fake repositories.
+- No `.Result`/`.Wait()`, no `IQueryable` leak, no hardcoded secrets, no `TODO`/`FIXME`.
+- Comment at `TrafficEventRepository.cs:47` explains a genuine non-obvious architectural constraint (JSONB ValueConverter prevents EF projection) — passes code-style.md.
+- Member order correct throughout.
+- Reasoning log: all required sections present, zero-padded filename, both Codex job IDs recorded.
+- 12 new tests covering: empty result, filter per field, combined AND filters, ascending/descending sort, pagination (mid-page, beyond-last-page), pageSize cap, unknown sort field.
+
+One nit (not blocking): `BuildDetectionSummary` is duplicated identically between `TrafficEventRepository` and the nested `FakeTrafficEventRepository` in tests. A shared static helper in a test utility class would eliminate the drift risk, but this is a test-internal concern and does not affect production correctness.
