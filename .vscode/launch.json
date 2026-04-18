@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch TrafficMonitor.Api (Development)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/TrafficMonitor.Api/bin/Debug/net10.0/TrafficMonitor.Api.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/TrafficMonitor.Api",
+            "stopAtEntry": false,
+            "console": "integratedTerminal",
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ConnectionStrings__Postgres": "Host=localhost;Port=5432;Database=traffic_monitor;Username=traffic;Password=change-me-in-env"
+            },
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+                "uriFormat": "%s/scalar/v1"
+            }
+        },
+        {
+            "name": "Attach to running API",
+            "type": "coreclr",
+            "request": "attach"
+        }
+    ]
+}
