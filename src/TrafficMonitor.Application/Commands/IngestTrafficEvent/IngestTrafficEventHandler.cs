@@ -21,6 +21,8 @@ public sealed class IngestTrafficEventHandler
         ArgumentNullException.ThrowIfNull(command);
 
         var input = command.Input ?? throw new ArgumentNullException(nameof(command.Input));
+        ValidateInput(input);
+
         var existingTrafficEvent = await _trafficEventRepository.FindByEventIdAsync(
             input.EventId,
             cancellationToken);
@@ -30,19 +32,14 @@ public sealed class IngestTrafficEventHandler
             return new IngestTrafficEventResult(existingTrafficEvent.EventId, true);
         }
 
-        ValidateInput(input);
-
-        var cameraId = input.CameraId ?? throw new ArgumentException("CameraId is required.", nameof(input.CameraId));
-        var detections = input.Detections ?? throw new ArgumentException("Detections are required.", nameof(input.Detections));
-
         var trafficEvent = new TrafficEvent(
             input.EventId,
             input.EventType,
             input.Severity,
-            cameraId,
+            input.CameraId!,
             input.OccurredAt,
             DateTime.UtcNow,
-            MapDetections(detections));
+            MapDetections(input.Detections!));
 
         await _trafficEventRepository.AddAsync(trafficEvent, cancellationToken);
         await _trafficEventRepository.SaveChangesAsync(cancellationToken);

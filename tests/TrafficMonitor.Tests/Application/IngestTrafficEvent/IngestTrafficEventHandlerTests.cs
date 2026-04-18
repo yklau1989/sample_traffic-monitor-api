@@ -71,13 +71,13 @@ public class IngestTrafficEventHandlerTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public async Task HandleAsync_WithMissingCameraId_ThrowsException(string? cameraId)
+    public async Task HandleAsync_WithMissingCameraId_ThrowsValidationException(string? cameraId)
     {
         var handler = new IngestTrafficEventHandler(new FakeTrafficEventRepository());
         var command = new IngestTrafficEventCommand(
             CreateInput(Guid.NewGuid(), cameraId, DateTime.UtcNow.AddMinutes(-1)));
 
-        await Assert.ThrowsAnyAsync<Exception>(() => handler.HandleAsync(command, CancellationToken.None));
+        await Assert.ThrowsAsync<ValidationException>(() => handler.HandleAsync(command, CancellationToken.None));
     }
 
     private static IngestTrafficEventCommand CreateCommand(
