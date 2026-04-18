@@ -42,20 +42,45 @@ Log every pass in the reasoning log's *Status / Next* section with the Codex job
 
 When `backend-dev` or `frontend-dev` returns blocked (per their "When you're blocked" rule), the **main-thread orchestrator** (Claude) takes over. Two modes, in order of preference:
 
-1. **Orchestrator drives Codex directly.** Invoke `Skill(skill: "codex:rescue", args: "<brief>")` from the main thread. The orchestrator's tool grant often works even when a subagent's doesn't (runtime tool-cache issue — see memory `feedback_subagent_tool_cache`). Same 2-pass budget, same watchdog. Try this **first** — it's historically succeeded where the dev-agent handoff failed.
-2. **Codex itself is unreachable** (watchdog trips, terminal error, quota exhausted per the ChatGPT-auth rule, or Skill keeps stalling even from main thread). Orchestrator implements directly — **one layer at a time** (Domain → Application → Infrastructure → Api → Tests), spawning the `reviewer` agent between layers before continuing. No batching.
+1. **Orchestrator drives Codex directly via the Bash companion.** `Skill(codex:rescue)` hangs indefinitely on its internal `task-resume-candidate --json` call — confirmed on issue #20 and codified in memory `feedback_codex_via_bash`. Use the companion script instead:
+
+   ```bash
+   COMPANION=$(ls -1t /Users/yklau/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs | head -1)
+   # Write brief to /tmp/codex-brief.md (use Write tool, not heredoc)
+   RESPONSE=$(node "$COMPANION" task --background --write --fresh "$(cat /tmp/codex-brief.md)")
+   JOB=$(echo "$RESPONSE" | grep -oE 'task-[a-z0-9-]+' | head -1)
+   ```
+
+   **Polling MUST run in the FOREGROUND of the main thread** (never `run_in_background: true`). A silent 60-second block feels like a freeze — Martin is watching. Emit a visible status line every 45s:
+
+   ```bash
+   while :; do
+     node "$COMPANION" status "$JOB" --json > /tmp/codex-status.json 2>/dev/null
+     STATUS=$(grep -oE '"status":[^,]+' /tmp/codex-status.json | head -1 | grep -oE '"[^"]+"$' | tr -d '"')
+     PHASE=$(grep -oE '"phase":[^,]+' /tmp/codex-status.json | head -1 | grep -oE '"[^"]+"$' | tr -d '"')
+     ELAPSED=$(grep -oE '"elapsed":[^,]+' /tmp/codex-status.json | head -1 | grep -oE '"[^"]+"$' | tr -d '"')
+     echo "[$(date +%H:%M:%S)] status=$STATUS phase=$PHASE elapsed=$ELAPSED"
+     [ "$STATUS" != "running" ] && break
+     sleep 45
+   done
+   ```
+
+   `grep` — not `jq` / `python3 -c json.load` — because the status response embeds raw newlines inside strings. Same 2-pass budget, same watchdog (10-min cap, 3-min phase-stall, terminal-status stop). Fetch the result with `python3 -c "import json; ..."` (result response is clean).
+
+2. **Codex itself is unreachable** (watchdog trips, terminal error, quota exhausted per the ChatGPT-auth rule, or companion script missing). Orchestrator implements directly — **one layer at a time** (Domain → Application → Infrastructure → Api → Tests), spawning the `reviewer` agent between layers before continuing. No batching.
 
 This is the **only** sanctioned exception to the "do not silently write code" rule below, and it only applies to the main-thread orchestrator, never to `backend-dev` / `frontend-dev`. Document in the reasoning log: which tier was used, why Codex wasn't reachable via the dev agent, reviewer verdict per layer if tier 2.
 
 ## What auto-fails review
 
-- **Dev agents** (`backend-dev`, `frontend-dev`) silently writing implementation code because Codex was unavailable — they must bail out per their "When you're blocked" section instead. The orchestrator-fallback exception above does NOT apply to dev agents.
+- Silently writing implementation code because Codex was unavailable — the backend-dev / frontend-dev agents explicitly forbid this (see their own rules).
 - Continuing past a docker failure by editing unrelated files "while we're here."
 - Retrying a failing Codex call more than once without confirmation.
 - Hiding a Codex quota warning inside a reasoning log instead of surfacing it at the moment it appeared.
 - A **third Codex pass** on the same slice without Martin's go-ahead (see iteration-budget section).
 - Hand-patching Codex's output after Pass 2 instead of stopping and reporting.
 - Running Codex in **API-key mode** (`OPENAI_API_KEY` set, or `authMethod != "chatgpt"` in `/codex:setup`). ChatGPT-subscription auth only.
+- Running the Codex polling loop with `run_in_background: true` on the main thread. It MUST be foreground with visible 45s status ticks so Martin sees the run progressing.
 
 ## Out of scope for this rule
 
