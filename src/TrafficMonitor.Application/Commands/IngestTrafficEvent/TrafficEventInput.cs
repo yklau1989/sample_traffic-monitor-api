@@ -7,9 +7,9 @@ public sealed record TrafficEventInput(
     Guid EventId,
     EventType EventType,
     Severity Severity,
-    [property: Required]
-    [property: StringLength(64, MinimumLength = 1)]
+    [Required]
+    [StringLength(64, MinimumLength = 1)]
     string? CameraId,
     DateTime OccurredAt,
-    [property: Required]
+    [Required]
     IReadOnlyCollection<DetectionInput>? Detections);

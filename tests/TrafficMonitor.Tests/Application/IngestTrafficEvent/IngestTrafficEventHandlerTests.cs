@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using TrafficMonitor.Application.Commands.IngestTrafficEvent;
 using TrafficMonitor.Application.Repositories;
 using TrafficMonitor.Domain.Entities;
@@ -71,13 +70,13 @@ public class IngestTrafficEventHandlerTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public async Task HandleAsync_WithMissingCameraId_ThrowsValidationException(string? cameraId)
+    public async Task HandleAsync_WithMissingCameraId_ThrowsArgumentException(string? cameraId)
     {
         var handler = new IngestTrafficEventHandler(new FakeTrafficEventRepository());
         var command = new IngestTrafficEventCommand(
             CreateInput(Guid.NewGuid(), cameraId, DateTime.UtcNow.AddMinutes(-1)));
 
-        await Assert.ThrowsAsync<ValidationException>(() => handler.HandleAsync(command, CancellationToken.None));
+        await Assert.ThrowsAsync<ArgumentException>(() => handler.HandleAsync(command, CancellationToken.None));
     }
 
     private static IngestTrafficEventCommand CreateCommand(

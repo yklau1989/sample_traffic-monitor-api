@@ -10,7 +10,6 @@ internal sealed class GlobalExceptionHandler : IExceptionHandler
     private const string BadRequestType = "https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.1";
     private const string InternalServerErrorType = "https://datatracker.ietf.org/doc/html/rfc9110#section-15.6.1";
     private const string ValidationErrorTitle = "One or more validation errors occurred.";
-    private const string BadRequestTitle = "Bad Request";
     private const string InternalServerErrorTitle = "Internal Server Error";
     private const string ValidationErrorDetail = "See the errors property for details.";
     private const string UnexpectedErrorDetail = "An unexpected error occurred while processing the request.";
@@ -97,9 +96,9 @@ internal sealed class GlobalExceptionHandler : IExceptionHandler
     {
         var problemDetails = new ProblemDetails
         {
-            Type = BadRequestType,
-            Title = BadRequestTitle,
-            Status = StatusCodes.Status400BadRequest,
+            Type = "https://datatracker.ietf.org/doc/html/rfc9110#section-15.5.20",
+            Title = "Unprocessable Entity",
+            Status = StatusCodes.Status422UnprocessableEntity,
             Detail = exception.Message
         };
 

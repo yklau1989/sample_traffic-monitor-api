@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using TrafficMonitor.Application.Repositories;
 using TrafficMonitor.Domain.Entities;
 using TrafficMonitor.Domain.ValueObjects;
@@ -49,8 +48,6 @@ public sealed class IngestTrafficEventHandler
 
     private static void ValidateInput(TrafficEventInput input)
     {
-        Validator.ValidateObject(input, new ValidationContext(input), validateAllProperties: true);
-
         if (input.EventId == Guid.Empty)
         {
             throw new ArgumentException("EventId cannot be empty.", nameof(input.EventId));
@@ -66,9 +63,9 @@ public sealed class IngestTrafficEventHandler
             throw new ArgumentException("CameraId is required.", nameof(input.CameraId));
         }
 
-        foreach (var detection in input.Detections ?? [])
+        if (input.Detections is null)
         {
-            Validator.ValidateObject(detection, new ValidationContext(detection), validateAllProperties: true);
+            throw new ArgumentException("Detections is required.", nameof(input.Detections));
         }
     }
 
