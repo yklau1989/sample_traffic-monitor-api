@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace TrafficMonitor.Domain.ValueObjects;
 
 public class BoundingBox : IEquatable<BoundingBox>
@@ -14,6 +16,7 @@ public class BoundingBox : IEquatable<BoundingBox>
     {
     }
 
+    [JsonConstructor]
     public BoundingBox(double x, double y, double width, double height)
     {
         X = ValidateFinite(x, nameof(X));

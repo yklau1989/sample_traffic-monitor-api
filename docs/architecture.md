@@ -60,7 +60,7 @@ Why: keeps handlers small, prevents write-side fields leaking into dashboard res
 - Postgres + Npgsql + EF Core 10.
 - Snake-case naming convention.
 - **Internal `int Id`** for joins; **external `Guid EventId`** for the API and idempotency. API never exposes `Id`.
-- `Detections` stored as **JSONB** via `OwnsMany(...).ToJson()` — value objects always loaded with their parent, never queried independently.
+- `Detections` stored as **JSONB** via a `ValueConverter<List<Detection>, string>` (System.Text.Json, camelCase) on the `_detections` backing field — value objects always loaded with their parent, never queried independently.
 - Unique index on `EventId` enforces idempotency at the DB layer.
 
 ## Real-time feed
@@ -74,7 +74,7 @@ Single-instance design; no Redis / SignalR. Sufficient for the take-home.
 | Decision | Chosen | Rejected | Why |
 |---|---|---|---|
 | Idempotency | Unique index on `EventId`, catch unique-violation | Pre-check SELECT | Race-free; one round trip in the happy path |
-| Detections storage | JSONB via `OwnsMany.ToJson()` | Separate `detections` table | No independent query need, avoids joins, keeps aggregate intact |
+| Detections storage | JSONB via `ValueConverter` + `System.Text.Json` | Separate `detections` table | No independent query need, avoids joins, keeps aggregate intact |
 | Real-time delivery | In-process `Channel<T>` + SSE | SignalR / Redis pub-sub | Single instance, no extra infra, easy to reason about |
 | CQRS | Light (handlers + separate DTOs, same DB) | Full CQRS with read store | Over-engineered for the scale; preserves most of the readability win |
 | Event generator | `BackgroundService` POSTing via HTTP | Direct DB seeding | Exercises the real ingest path; duplicates = free idempotency test |

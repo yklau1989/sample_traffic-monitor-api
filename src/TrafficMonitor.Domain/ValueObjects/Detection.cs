@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace TrafficMonitor.Domain.ValueObjects;
 
 public class Detection : IEquatable<Detection>
@@ -14,6 +16,7 @@ public class Detection : IEquatable<Detection>
         BoundingBox = default!;
     }
 
+    [JsonConstructor]
     public Detection(string label, double confidence, BoundingBox boundingBox)
     {
         Label = ValidateLabel(label);

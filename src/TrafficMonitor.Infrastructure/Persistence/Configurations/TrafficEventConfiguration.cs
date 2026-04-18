@@ -1,6 +1,10 @@
+using System.Text.Json;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TrafficMonitor.Domain.Entities;
+using TrafficMonitor.Domain.ValueObjects;
 
 namespace TrafficMonitor.Infrastructure.Persistence.Configurations;
 
@@ -8,7 +12,23 @@ public class TrafficEventConfiguration : IEntityTypeConfiguration<TrafficEvent>
 {
     public void Configure(EntityTypeBuilder<TrafficEvent> builder)
     {
+        var jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
+        var detectionsConverter = new ValueConverter<List<Detection>, string>(
+            detections => JsonSerializer.Serialize(detections, jsonOptions),
+            json => JsonSerializer.Deserialize<List<Detection>>(json, jsonOptions) ?? new List<Detection>());
+
+        var detectionsComparer = new ValueComparer<List<Detection>>(
+            (a, b) => JsonSerializer.Serialize(a, jsonOptions) == JsonSerializer.Serialize(b, jsonOptions),
+            detections => JsonSerializer.Serialize(detections, jsonOptions).GetHashCode(),
+            detections => JsonSerializer.Deserialize<List<Detection>>(
+                JsonSerializer.Serialize(detections, jsonOptions), jsonOptions)!);
+
         builder.HasKey(trafficEvent => trafficEvent.Id);
+        builder.Ignore(trafficEvent => trafficEvent.Detections);
 
         builder.Property(trafficEvent => trafficEvent.Id)
             .ValueGeneratedOnAdd();
@@ -35,14 +55,11 @@ public class TrafficEventConfiguration : IEntityTypeConfiguration<TrafficEvent>
         builder.Property(trafficEvent => trafficEvent.IngestedAt)
             .IsRequired();
 
-        builder.Navigation(trafficEvent => trafficEvent.Detections)
+        builder.Property<List<Detection>>("_detections")
             .HasField("_detections")
-            .UsePropertyAccessMode(PropertyAccessMode.Field);
-
-        builder.OwnsMany(trafficEvent => trafficEvent.Detections, owned =>
-        {
-            owned.OwnsOne(detection => detection.BoundingBox);
-            owned.ToJson();
-        });
+            .UsePropertyAccessMode(PropertyAccessMode.Field)
+            .HasConversion(detectionsConverter, detectionsComparer)
+            .HasColumnName("detections")
+            .HasColumnType("jsonb");
     }
 }
