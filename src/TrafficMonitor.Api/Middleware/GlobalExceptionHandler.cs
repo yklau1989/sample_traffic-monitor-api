@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using TrafficMonitor.Application.Exceptions;
 
 namespace TrafficMonitor.Api.Middleware;
 
@@ -38,6 +39,18 @@ internal sealed class GlobalExceptionHandler : IExceptionHandler
         if (exception is ValidationException validationException)
         {
             problemDetails = CreateValidationProblemDetails(validationException, httpContext);
+        }
+        else if (exception is InvalidSortFieldException invalidSortFieldException)
+        {
+            problemDetails = new ProblemDetails
+            {
+                Type = BadRequestType,
+                Title = "Invalid sort field",
+                Status = StatusCodes.Status400BadRequest,
+                Detail = invalidSortFieldException.Message
+            };
+
+            problemDetails.Extensions[TraceIdExtensionName] = GetTraceId(httpContext);
         }
         else if (exception is ArgumentException argumentException)
         {

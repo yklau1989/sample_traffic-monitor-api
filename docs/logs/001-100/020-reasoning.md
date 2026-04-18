@@ -46,11 +46,12 @@ Two backend-dev spawns this session both stopped at the Codex handoff because th
 - Watchdog section added to both: 10-min cap, 3-min phase-stall, terminal-status stop, poll-error retry-once, 30-sec interactive-prompt bail-out, escalation format.
 - Note added that stale system-reminder tool lists should not block the attempt.
 
-**To resume in the next session:**
-1. Confirm PR #42 is merged (or merge it first).
-2. `git checkout feature/20-get-events-controller` (already exists, reasoning log skeleton committed).
-3. Spawn `backend-dev` with the brief below — it should now successfully invoke `Skill(codex:rescue)`.
-4. Standard flow from there: 2 Codex passes max, reviewer agent, Martin approval.
+**Resumed 2026-04-18 (session 2):**
+
+- PR #42 (Skill handoff + watchdog rules) merged cleanly; main now has it and feature/20 was updated with `git merge origin/main`.
+- Martin directed a plan change: do NOT spawn `backend-dev` again. Previous two `backend-dev` spawns hung indefinitely at `Skill(codex:rescue)` (runtime tool-grant cache issue). Instead, **orchestrator drives Codex directly from main thread** per the new `Orchestrator fallback` rule added in `.claude/rules/escalation.md` (commit 366b33a, same branch).
+- Tier 1 (orchestrator drives Codex via `Skill(codex:rescue)` from main thread) is the path taken for #20. Tier 2 (orchestrator writes code layer-by-layer with reviewer gates) is reserved for Codex-unreachable cases.
+- `/codex:setup --json` verified: `ready: true`, `authMethod: chatgpt`, `loggedIn: true`. Proceeding.
 
 **Brief for next backend-dev spawn (self-contained):**
 - Issue: https://github.com/yklau1989/sample_traffic-monitor-api/issues/20
@@ -65,6 +66,13 @@ Two backend-dev spawns this session both stopped at the Codex handoff because th
 - Member order: properties before constructors (positional records satisfy this).
 - Out of scope: Testcontainers, refactoring #17/#19 code, any new files outside the 5 listed.
 
-**Codex job IDs:** _(to be appended after the next-session run completes)_
+**Codex job IDs:**
+- Pass 1: `task-mo4afmvw-zeigzu` — kicked off via `node codex-companion.mjs task --background --write --fresh` from the main-thread orchestrator (tier 1 of the new fallback). Skill(codex:rescue) had been stalling indefinitely on its internal `task-resume-candidate` call; the direct-companion path bypassed that. Completed in 8m 55s (`status=completed`, `phase=done`). Touched exactly the 5 in-scope files. **Accepted Pass 1 — no Pass 2 needed.**
+
+**Orchestrator verification:**
+- `dotnet build` — 0 warnings, 0 errors.
+- `dotnet test` — 57/57 passed (53 pre-existing + 4 new: happy path, severity filter, unknown-sort 400, naive-timestamp 400).
+- `git diff src/ tests/ | grep -E '\.Result|\.Wait\(\)|GetAwaiter|FromSqlRaw'` — no hits.
+- `ListEventsRequest` declared as positional record in `EventsController.cs` per brief. `InvalidSortFieldException` branch added before `ArgumentException` branch per brief. `ListTrafficEventsHandler` registered scoped in `Program.cs`.
 
 **After #20 ships:** Martin reviews + approves PR; submission ready. Issues explicitly out of scope: #18, #21, #22, #23–#29, #27, #30, #31.
