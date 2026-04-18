@@ -21,16 +21,19 @@ Rules:
 
 ## Reasoning logs (AI tool usage artifact)
 
-One per issue at `docs/logs/{range}/{issue-number}-reasoning.md` — e.g. `docs/logs/001-010/003-reasoning.md`.
+One per issue at `docs/logs/{range}/{issue-number}-reasoning.md` — e.g. `docs/logs/001-100/011-reasoning.md`.
 
-Ranges: `001-010` (foundation), `011-020` (core + real-time), `021-030` (polish). Create the directory on first use.
+**Filename:** zero-pad the issue number to three digits (`011-reasoning.md`, not `11-reasoning.md`). Auto-fails review if not padded.
+
+**Ranges:** group issues in blocks of 100 — `001-100`, `101-200`, `201-300`, ... Create the directory on first use. Do not sub-split into 10-issue buckets; keeps the log tree shallow and avoids near-empty directories.
 
 **Required sections:**
 
-1. **Decision** — one paragraph: what was chosen.
-2. **Options considered** — bulleted list of the alternatives; for each, why it lost.
-3. **Trade-offs** — what this decision costs, explicitly.
-4. **Status / Next** — what's verified, what's open, what the next issue should pick up. This is the cross-session handoff.
+1. **Conversation trail** — Martin's directives that shaped the issue, quoted verbatim, plus your response / interpretation / pushback for each. Do not paraphrase Martin. The evaluator (and future-you) needs to see *how* the decision was reached, not just the condensed outcome.
+2. **Decision** — one paragraph: what was chosen.
+3. **Options considered** — bulleted list of the alternatives; for each, why it lost.
+4. **Trade-offs** — what this decision costs, explicitly.
+5. **Status / Next** — what's verified, what's open, what the next issue should pick up. This is the cross-session handoff.
 
 Optionally:
 
@@ -42,6 +45,7 @@ Rules:
 - Every agent writes one before marking an issue done. No log, no merge.
 - Write it in the same PR as the code it documents.
 - Keep under ~200 lines. If a decision needs more, it's an ADR (see below).
+- Capture the conversation, not just the conclusion. A log that only states "decided X" loses the evidence trail.
 
 ## Architecture Decision Records (optional)
 
