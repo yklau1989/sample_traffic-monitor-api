@@ -67,6 +67,15 @@ The repo ships `.env.example` as a template. The defaults work out-of-the-box fo
 cp .env.example .env
 ```
 
+> ⚠️ **If you change `POSTGRES_PASSWORD` after the container has already been created:** Postgres only reads this variable on *first boot* (when the data volume is empty). Editing `.env` later has no effect — the old password is baked into the `postgres-data` volume. To pick up the new value, wipe the volume and let Postgres re-initialise:
+>
+> ```bash
+> docker compose down -v        # -v deletes postgres-data (wipes all rows)
+> docker compose up -d postgres
+> ```
+>
+> Or, to keep your data, change the password in-place via SQL: `docker compose exec postgres psql -U traffic -d traffic_monitor -c "ALTER USER traffic WITH PASSWORD '...';"` — then update your `.env` and `ConnectionStrings__Postgres` export to match.
+
 **Step 3 — Start Postgres**
 
 Bring up *only* the Postgres container from `docker-compose.yml`. We leave the API container out of this path so you can run the API locally (hot reload, attach debugger, etc.).

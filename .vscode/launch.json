@@ -12,9 +12,9 @@
             "stopAtEntry": false,
             "console": "integratedTerminal",
             "env": {
-                "ASPNETCORE_ENVIRONMENT": "Development",
-                "ConnectionStrings__Postgres": "Host=localhost;Port=5432;Database=traffic_monitor;Username=traffic;Password=change-me-in-env"
+                "ASPNETCORE_ENVIRONMENT": "Development"
             },
+            "envFile": "${workspaceFolder}/.env",
             "serverReadyAction": {
                 "action": "openExternally",
                 "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
