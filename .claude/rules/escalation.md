@@ -38,9 +38,18 @@ Log every pass in the reasoning log's *Status / Next* section with the Codex job
 - Do **not** retry in a loop, switch tools silently, or pick a workaround that masks the underlying issue.
 - Wait for Martin's explicit go-ahead before the next action. "Retry", "skip", "do it yourself", or "abort" — those are Martin's calls, not yours.
 
+## Orchestrator fallback — when dev agents can't reach Codex
+
+When `backend-dev` or `frontend-dev` returns blocked (per their "When you're blocked" rule), the **main-thread orchestrator** (Claude) takes over. Two modes, in order of preference:
+
+1. **Orchestrator drives Codex directly.** Invoke `Skill(skill: "codex:rescue", args: "<brief>")` from the main thread. The orchestrator's tool grant often works even when a subagent's doesn't (runtime tool-cache issue — see memory `feedback_subagent_tool_cache`). Same 2-pass budget, same watchdog. Try this **first** — it's historically succeeded where the dev-agent handoff failed.
+2. **Codex itself is unreachable** (watchdog trips, terminal error, quota exhausted per the ChatGPT-auth rule, or Skill keeps stalling even from main thread). Orchestrator implements directly — **one layer at a time** (Domain → Application → Infrastructure → Api → Tests), spawning the `reviewer` agent between layers before continuing. No batching.
+
+This is the **only** sanctioned exception to the "do not silently write code" rule below, and it only applies to the main-thread orchestrator, never to `backend-dev` / `frontend-dev`. Document in the reasoning log: which tier was used, why Codex wasn't reachable via the dev agent, reviewer verdict per layer if tier 2.
+
 ## What auto-fails review
 
-- Silently writing implementation code because Codex was unavailable — the backend-dev / frontend-dev agents explicitly forbid this (see their own rules).
+- **Dev agents** (`backend-dev`, `frontend-dev`) silently writing implementation code because Codex was unavailable — they must bail out per their "When you're blocked" section instead. The orchestrator-fallback exception above does NOT apply to dev agents.
 - Continuing past a docker failure by editing unrelated files "while we're here."
 - Retrying a failing Codex call more than once without confirmation.
 - Hiding a Codex quota warning inside a reasoning log instead of surfacing it at the moment it appeared.

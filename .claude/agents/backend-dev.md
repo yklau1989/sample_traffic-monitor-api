@@ -75,8 +75,18 @@ Never poll forever. Apply the rules from `feedback_codex_watchdog`:
 2. **3-minute phase-stall detector.** `phase` doesn't advance for 3 min → escalate even if under the 10-min cap.
 3. **Terminal status (`failed`/`cancelled`/`error`) → stop immediately**, fetch result, report. No silent retries.
 4. **Poll-path errors → retry once, then escalate.** Don't loop on a broken status fetch.
-5. **30-second bail-out on interactive approval prompts.** If a `Skill` call sits unresolved ~30s, assume Martin isn't at the keyboard — cancel and re-route via direct `node .claude/codex-companion.mjs ...` Bash call, or stop and ask.
+5. **30-second bail-out on stuck Skill calls.** If `Skill(codex:rescue)` sits with no response for ~30s — whether the tool isn't in your runtime list, the handoff silently stalls, or an approval prompt won't resolve — cancel, update the reasoning log with one sentence, and hand back to the orchestrator per "When you're blocked" below. Do NOT attempt a Bash fallback from inside this agent.
 6. **Escalation message format:** one short line — which rule tripped, the snapshot, one proposed next action. Then wait for Martin.
+
+### When you're blocked — hand back to orchestrator
+
+If any of the above watchdog rules trip, OR `Skill(codex:rescue)` fails to start after one attempt + 30s wait, OR Codex returns a terminal error — **stop**. Do not retry, do not write implementation code yourself, do not spawn nested subagents.
+
+Exit with one short paragraph in this form:
+
+> Blocked at {stage — e.g. "Skill(codex:rescue) handoff"}. Symptom: {one sentence}. Reasoning log updated at {path}. Handing back to orchestrator.
+
+The orchestrator has an explicit fallback path (see `.claude/rules/escalation.md` → "Orchestrator fallback") — it will either drive Codex from the main thread or, if Codex itself is unreachable, implement directly in reviewer-gated micro-slices. That is the **only** sanctioned bypass of the "do not write code" rule, and it happens in the orchestrator, not in this agent.
 
 After Codex returns a diff:
 
