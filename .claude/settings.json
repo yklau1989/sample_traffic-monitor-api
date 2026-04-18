@@ -148,6 +148,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/block-config-edit.sh",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "SessionEnd": [
