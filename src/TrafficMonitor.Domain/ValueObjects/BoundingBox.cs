@@ -1,14 +1,40 @@
+using System.Text.Json.Serialization;
+
 namespace TrafficMonitor.Domain.ValueObjects;
 
-public record BoundingBox(double X, double Y, double Width, double Height)
+public class BoundingBox : IEquatable<BoundingBox>
 {
-    public double X { get; init; } = ValidateFinite(X, nameof(X));
+    public double X { get; private init; }
 
-    public double Y { get; init; } = ValidateFinite(Y, nameof(Y));
+    public double Y { get; private init; }
 
-    public double Width { get; init; } = ValidateDimension(Width, nameof(Width));
+    public double Width { get; private init; }
 
-    public double Height { get; init; } = ValidateDimension(Height, nameof(Height));
+    public double Height { get; private init; }
+
+    private BoundingBox()
+    {
+    }
+
+    [JsonConstructor]
+    public BoundingBox(double x, double y, double width, double height)
+    {
+        X = ValidateFinite(x, nameof(X));
+        Y = ValidateFinite(y, nameof(Y));
+        Width = ValidateDimension(width, nameof(Width));
+        Height = ValidateDimension(height, nameof(Height));
+    }
+
+    public bool Equals(BoundingBox? other) =>
+        other is not null
+        && X.Equals(other.X)
+        && Y.Equals(other.Y)
+        && Width.Equals(other.Width)
+        && Height.Equals(other.Height);
+
+    public override bool Equals(object? obj) => Equals(obj as BoundingBox);
+
+    public override int GetHashCode() => HashCode.Combine(X, Y, Width, Height);
 
     private static bool IsFinite(double value) => !double.IsNaN(value) && !double.IsInfinity(value);
 

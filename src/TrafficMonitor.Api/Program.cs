@@ -1,9 +1,13 @@
+using TrafficMonitor.Infrastructure;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 
 _ = builder.Configuration.GetConnectionString("Postgres")
     ?? throw new InvalidOperationException("ConnectionStrings:Postgres is not configured.");
+
+builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
