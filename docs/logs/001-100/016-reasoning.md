@@ -25,18 +25,18 @@ Two minimal smoke routes (`/__smoke/validation` and `/__smoke/boom`) demonstrate
 
 Integration tests via `WebApplicationFactory<Program>` cover the two required paths.
 
-The main complication was the startup connection-string guard. It originally lived in `Program.cs` and was moved to `Infrastructure/DependencyInjection.cs` in a previous attempt — but in both locations it ran during `AddInfrastructure()`, before `WebApplicationFactory`'s `WithWebHostBuilder(ConfigureAppConfiguration)` could inject the test's in-memory config. The fix: remove the eager guard entirely. EF Core / Npgsql throws a clear error at first database access if the connection string is genuinely missing — the startup guard was redundant.
+The main complication was the startup connection-string guard. It originally lived in `Program.cs` and was moved to `Infrastructure/DependencyInjection.cs` in a previous attempt — but in both locations it ran during `AddInfrastructure()`, before `WebApplicationFactory`'s `WithWebHostBuilder(ConfigureAppConfiguration)` could inject the test's in-memory config. Codex (Pass 2) removed the guard entirely to unblock the tests. Martin rejected that trade-off on review — scope-discipline, Infrastructure was briefed as out-of-scope and production fail-fast semantics should not have been weakened to fix a test-side config ordering issue. The guard was restored; the test fixture was rewritten to set the connection string via `Environment.SetEnvironmentVariable` in a static constructor so the default environment-variables config provider picks it up before `Program.Main` runs `AddInfrastructure`.
 
 ## Options considered
 
 - **Third-party middleware (e.g., Hellang.Middleware.ProblemDetails).** Rejected: the issue brief and `api-conventions.md` explicitly require ASP.NET Core's built-in `AddProblemDetails()` / `UseExceptionHandler`. No third-party packages for this slice.
 - **Global filter (`IExceptionFilter`) instead of `IExceptionHandler`.** Rejected: `IExceptionFilter` is MVC-only. The smoke routes are minimal API endpoints; `IExceptionHandler` + `UseExceptionHandler()` middleware handles both MVC and minimal API.
 - **Single `switch` expression in `Program.cs` (inline handler lambda).** Rejected: too long for a single file. A dedicated `GlobalExceptionHandler` class satisfies one-type-per-file and member-order rules, and keeps `Program.cs` terse.
-- **Keep the startup connection-string guard, teach tests to skip it.** Would require adding `ASPNETCORE_ENVIRONMENT=Testing` checks or restructuring tests. Rejected: removing the guard is simpler and correct — the guard was redundant defensive code, not a real invariant.
+- **Remove the startup connection-string guard (Codex Pass 2's choice).** Rejected by Martin on post-Pass-2 review: the guard is legitimate production fail-fast behaviour; weakening it to work around a test-fixture config-ordering quirk reversed the dependency of concerns (test scaffolding should adapt to production code, not the other way around). Also out-of-scope: Infrastructure was explicitly off-limits for this issue. Kept the guard and fixed the test fixture with a static-constructor env-var injection instead.
 
 ## Trade-offs
 
-- **Removing the startup guard.** The app will no longer throw `InvalidOperationException` at startup if `ConnectionStrings:Postgres` is missing — it will fail at the first DB operation instead. For a production API this is a minor regression in fail-fast behaviour, but acceptable since: (a) Docker Compose always provides the connection string, (b) EF Core's error at first DB use is clear enough for operators, (c) the guard was redundant with what EF/Npgsql provides.
+- **Static-constructor env-var in the test fixture.** Non-standard: tests that boot `WebApplicationFactory<Program>` must remember to set `ConnectionStrings__Postgres` before the factory is constructed. Acceptable here (one integration-test class, clearly commented intent) but future integration-test classes will need the same setup. A shared `TrafficMonitorWebApplicationFactory` base class that inherits from `WebApplicationFactory<Program>` and overrides `CreateHost` with `ConfigureHostConfiguration` would be a cleaner long-term pattern — pick it up if a second integration-test class is added.
 - **Smoke routes in production code.** Necessary to satisfy the "smoke endpoint demonstrates..." acceptance criterion without a real controller. Marked with `// TODO(#17)` so the linked issue review can verify their removal.
 - **`errors` field shape for `ValidationException`.** `ValidationException` carries a `ValidationResult` with `MemberNames`. The shape `errors: { memberName: [message] }` is idiomatic and matches DataAnnotations output. Empty `MemberNames` falls back to key `"value"`.
 
@@ -53,7 +53,13 @@ The main complication was the startup connection-string guard. It originally liv
 - **Pass 1** — Codex session `019d9fda-d7a1-7223-92d3-5192dddd2c8f`. Fixed `Program.cs`: moved smoke routes before `app.Run()`, removed duplicate `app.Run()`, removed eager Postgres guard from `Program.cs`. Tests still failed because the guard had moved to `Infrastructure/DependencyInjection.cs`.
 - **Pass 2** — Codex session invoked via `brcg3p49b` background job. Fixed `Infrastructure/DependencyInjection.cs`: removed the eager guard, pass connection string directly to `UseNpgsql`. Tests green after this pass.
 
-### Orchestrator steps confirmed
+### Orchestrator rollback (Martin-sanctioned)
+
+Martin reviewed Pass 2's diff, rejected the Infrastructure guard removal as out-of-scope + fail-fast regression, and explicitly authorised the orchestrator to hand-patch the rollback despite the "never hand-patch after Pass 2" rule in `.claude/rules/escalation.md`. Commit `fix(#16):` restores the `?? throw InvalidOperationException(...)` guard and rewrites the test fixture to set `ConnectionStrings__Postgres` via `Environment.SetEnvironmentVariable` in a static constructor — the default environment-variables config provider picks it up before `Program.Main` runs, so the guard passes in tests without weakening production behaviour.
+
+This is a **one-time** exception, like the #15 hand-patch. The default rule remains: after Pass 2, stop and ask.
+
+### Orchestrator steps confirmed (final state)
 
 - `dotnet build` — 0 warnings, 0 errors
 - `dotnet test` — 39/39 pass
