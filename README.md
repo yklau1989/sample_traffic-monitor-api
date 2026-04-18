@@ -110,7 +110,9 @@ If you changed `POSTGRES_PASSWORD` in `.env`, match it here.
 dotnet run --project src/TrafficMonitor.Api
 ```
 
-The API listens on `http://localhost:5124` (set in `src/TrafficMonitor.Api/Properties/launchSettings.json`). Leave this terminal open — `Ctrl+C` stops it.
+Or in VS Code: press **F5**. The repo ships a `.vscode/launch.json` that builds the project, sets the same `ConnectionStrings__Postgres` as Step 5, and auto-opens your browser to the Scalar UI when the server is ready. Breakpoints work.
+
+The API listens on `http://localhost:5124` (HTTP) and `https://localhost:7168` (HTTPS, when launched via the `https` profile) — ports set in `src/TrafficMonitor.Api/Properties/launchSettings.json`. Leave the terminal open — `Ctrl+C` stops it.
 
 **Step 7 — Verify it's alive**
 
@@ -123,15 +125,26 @@ curl -sS http://localhost:5124/api/events
 
 An empty list is the happy path — it means the API is up, Postgres is reachable, and the schema is there.
 
-**Step 8 — Explore with Postman (or curl)**
+**Step 8 — Explore the API**
 
-The API publishes its OpenAPI spec in Development at:
+Two options, Development mode only:
+
+**(a) Scalar UI — browse the API interactively in a browser:**
+
+```
+http://localhost:5124/scalar/v1
+https://localhost:7168/scalar/v1
+```
+
+Scalar renders the OpenAPI document as an interactive reference and lets you try endpoints from the browser. If you launched via VS Code F5, this tab opens automatically.
+
+**(b) Postman — import the OpenAPI spec:**
 
 ```
 http://localhost:5124/openapi/v1.json
 ```
 
-In Postman: **File → Import → Link**, paste the URL above, and Postman generates a collection with every endpoint pre-filled. (There's no bundled Swagger UI yet — on purpose, it was out of scope for the take-home.)
+In Postman: **File → Import → Link**, paste the URL above. Postman generates a collection with every endpoint pre-filled.
 
 A sample `POST /api/events` body to try:
 
