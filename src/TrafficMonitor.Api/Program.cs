@@ -1,5 +1,6 @@
-using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using TrafficMonitor.Api.Middleware;
+using TrafficMonitor.Application.Commands.IngestTrafficEvent;
 using TrafficMonitor.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,8 +14,10 @@ builder.Services.AddProblemDetails(options =>
 });
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddOpenApi();
-
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddScoped<IngestTrafficEventHandler>();
+builder.Services.AddControllers()
+    .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 var app = builder.Build();
 
@@ -26,16 +29,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-// TODO(#17): remove smoke routes when controller lands
-app.MapGet("/__smoke/validation", () =>
-{
-    throw new ValidationException(new ValidationResult("name is required", ["name"]), null, null);
-});
-
-app.MapGet("/__smoke/boom", () =>
-{
-    throw new InvalidOperationException("forced 500 for demo");
-});
+app.MapControllers();
 
 app.Run();
 
