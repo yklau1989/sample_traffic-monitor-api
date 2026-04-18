@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using TrafficMonitor.Application.Commands.IngestTrafficEvent;
+using TrafficMonitor.Application.Queries.ListTrafficEvents;
 using TrafficMonitor.Application.Repositories;
 using TrafficMonitor.Domain.Entities;
 using TrafficMonitor.Domain.Enums;
@@ -142,6 +143,13 @@ public sealed class EventsControllerTests : IClassFixture<WebApplicationFactory<
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult(_events.Count);
+        }
+
+        public Task<PagedResult<EventListItemDto>> ListAsync(
+            ListTrafficEventsQuery query,
+            CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
         }
     }
 }
