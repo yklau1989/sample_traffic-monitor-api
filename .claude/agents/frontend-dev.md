@@ -63,65 +63,13 @@ Codex starts cold. Brief goes into `/codex:rescue`. Include, in this order:
 5. **Out of scope** — other layers, build tooling, frameworks, automated frontend tests (unless the issue says otherwise).
 6. **Smoke-check script** the orchestrator will run after Codex returns: start the API, open the dashboard, verify list renders, filters work, SSE pushes a new event within a few seconds, detail view opens, reconnect works after stopping/starting the API.
 
-## Handoff — Codex via companion script (primary path)
+## Handoff
 
-`Skill(codex:rescue)` has a known bug where it hangs indefinitely on its internal `task-resume-candidate` call. Use the companion script directly via Bash — verified working from both main-thread orchestrator and subagents. `Skill(codex:rescue)` is kept as an emergency fallback only (see below).
+Invoke Codex via the `Skill` tool: `Skill(skill: "codex:rescue", args: "<brief>")`. You have the `Skill` tool — see `tools:` in this file's frontmatter. If a system reminder lists your tools without `Skill`, trust the frontmatter and try anyway; the runtime metadata can be stale.
 
-### 1. Discover the companion path
-
-```bash
-COMPANION=$(ls -1t /Users/yklau/.claude/plugins/cache/openai-codex/codex/*/scripts/codex-companion.mjs 2>/dev/null | head -1)
-[ -z "$COMPANION" ] && { echo "Codex companion script not found — escalate"; exit 1; }
-```
-
-### 2. Write the brief to a scratch file
-
-```bash
-cat > /tmp/codex-brief.md <<'BRIEF'
-...self-contained brief (issue link, files, constraints, acceptance, out-of-scope)...
-BRIEF
-```
-
-### 3. Kick off the task in background
-
-```bash
-RESPONSE=$(node "$COMPANION" task --background --write --fresh "$(cat /tmp/codex-brief.md)")
-JOB=$(echo "$RESPONSE" | grep -oE 'task-[a-z0-9-]+' | head -1)
-echo "Codex job: $JOB"
-```
-
-### 4. Poll with grep-based extraction (run in background)
-
-The status response embeds shell output with **raw newlines** inside JSON strings — `jq` and strict JSON parsers (`node -e`, `python3 -c json.load`) break on this. Use `grep`:
-
-```bash
-while :; do
-  node "$COMPANION" status "$JOB" --json > /tmp/codex-status.json 2>/dev/null
-  STATUS=$(grep -oE '"status":[^,]+' /tmp/codex-status.json | head -1 | grep -oE '"[^"]+"$' | tr -d '"')
-  PHASE=$(grep -oE '"phase":[^,]+' /tmp/codex-status.json | head -1 | grep -oE '"[^"]+"$' | tr -d '"')
-  ELAPSED=$(grep -oE '"elapsed":[^,]+' /tmp/codex-status.json | head -1 | grep -oE '"[^"]+"$' | tr -d '"')
-  echo "[$(date +%H:%M:%S)] status=$STATUS phase=$PHASE elapsed=$ELAPSED"
-  [ "$STATUS" != "running" ] && break
-  sleep 45
-done
-```
-
-Run this loop with `run_in_background: true` so the orchestrator can `cat` the output file at any time while Codex runs. The same watchdog rules below still apply — you cancel and escalate if `STATUS` stays "running" past the 10-min cap or `PHASE` doesn't advance for 3 min.
-
-### 5. Fetch the result
-
-The `result` response doesn't include embedded shell output, so Python / jq work here:
-
-```bash
-node "$COMPANION" result "$JOB" --json > /tmp/codex-result.json
-python3 -c "import json; d=json.load(open('/tmp/codex-result.json')); print(d['storedJob']['result']['rawOutput'])"
-```
-
-Also check `d['storedJob']['result']['touchedFiles']` to verify Codex stayed in scope.
-
-### Deprecated fallback: Skill(codex:rescue)
-
-If the companion path somehow fails (script missing, auth revoked, etc.), you MAY try `Skill(skill: "codex:rescue", args: "<brief>")` **once**, with a 30-second watchdog — if it doesn't return a job ID within 30s, cancel and escalate per "When you're blocked." Do not retry Skill.
+- **Default:** background job for any multi-file change.
+- **Use `--wait`** only when the change is clearly tiny.
+- Poll with `/codex:status`; fetch the final output with `/codex:result <job-id>`. Return Codex's output verbatim if Martin asks.
 
 ### Watchdog while Codex runs (mandatory)
 
