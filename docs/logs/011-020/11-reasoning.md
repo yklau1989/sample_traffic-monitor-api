@@ -220,3 +220,56 @@ High. All implementation files read. Build (0/0) and tests (30/30) independently
 ### Recommendation to Martin
 
 **Ship it.** The two nits are non-blocking and can be carried into the Application handler slice brief as a one-liner "add `readonly` + replace `!` with `??`" fix. Neither affects correctness, the migration, or the JSONB guarantee.
+
+---
+
+## Session handoff — 2026-04-18 (post-merge + planning wave)
+
+### State of play in one paragraph
+
+PR #14 is **merged** (commit `5229d88`). Issue #11 is **closed**. Local `main` is fast-forwarded and clean. The two reviewer nits (readonly on `_dbContext`, `!` → `?? new List<Detection>()` in the ValueComparer clone lambda) were fixed in commit `ea2f770` before merge — no carry-over debt from #11. Branch `feature/11b-infrastructure-persistence` is retained locally and on the remote per `git-workflow.md` (Martin decides when to delete).
+
+### What this session produced (beyond #11 wrap-up)
+
+- **17 new issues #15–#31** created via `develop-planner` covering the full remaining MVP surface: Application commands/queries/handlers, API controllers, ProblemDetails, integration-test harness, SSE broadcaster (split across the Clean-Architecture boundary), fake event generator, static frontend dashboard + SSE wiring, compose end-to-end wiring, GitHub Actions CI. Dependency graph and per-issue acceptance criteria live in the issue bodies.
+- **Two memories added:**
+  - `feedback_review_visibility.md` — never leave the repo at "committed locally + no push + no PR"; stop before commit for VS diff OR push+draft-PR immediately after.
+  - `feedback_planning_via_planner.md` — always spawn `develop-planner` for next-wave planning; never plan inline (issues are the refinement surface).
+
+### Martin's durable decisions during planning (applied to issue briefs)
+
+1. **Doc updates baked into the relevant issues** (not a catch-up issue): `docs/api-reference.md` refreshed inside #17 / #20 / #22 / #26; `docs/deployment.md` refreshed inside #30.
+2. **Validation approach:** DataAnnotations on the DTO + hand-rolled guards in the handler. No FluentValidation package. (Applied in #15's brief; the pattern carries into later Application slices unless Martin revises.)
+3. **Broadcaster split along the Clean-Architecture boundary:** interface + DTO in Application (#23), channel-based implementation + DI wiring in Infrastructure (#24). Motivation: interface boundary is one of the main evidences the evaluator will look at; making it visible as two issues reinforces the structure.
+4. **Fake event generator stays in-process** as a hosted `BackgroundService` inside the API (per `docs/architecture.md`). Not a separate compose service.
+
+### What to do first next session
+
+1. Read this file (the most recently modified reasoning log per the Session Resume rule in CLAUDE.md).
+2. Confirm `gh issue list --state open` shows #15–#31 (17 issues, all labelled `[claude]`).
+3. Confirm `main` is clean: `git status` should show only `.claude/settings.local.json` as modified (harness drift, per `.claude/rules/git-workflow.md` — do not stage or commit).
+4. Pick up **issue #15** first — it has no dependencies on other new issues and is the entry to the critical path. Brief backend-dev, let it prepare the Codex brief, 2-pass budget fresh.
+
+### Critical path to a visible demo
+
+```
+#15 → #16 → #17 → #18 → #19 → #20 → #28    (dashboard with filtered list)
+#23 → #24 → #25 → #26 → #29                 (live SSE updates)
+#27 → #30                                    (fake generator end-to-end)
+#31                                          (CI gate, landable any time after #18)
+```
+
+### Usage at handoff
+
+- **Claude**: Martin reports ~95% of the 5-hour quota used — that's the hard stop. `/context` showed 44% (88.5k / 200k) of the per-session context window, so token budget wasn't the constraint; wall-clock quota was.
+- **Codex**: 4 `task`-kind passes this session (#11 sub-slice 2 Pass 1 & 2, Option-B Pass 1 & 2). No quota warnings observed. `authMethod: "chatgpt"` verified clean throughout.
+
+### Landmines / notes for future-me
+
+1. **Reviewer agent does not write the verdict to the reasoning log itself** — it only reports the verdict in its response message. I had to append the verdict section by hand. Either update the reviewer agent's prompt-template to write + not commit, or plan on doing the append myself every time. Logging here so this isn't a surprise on the next reviewer run.
+2. **PR-without-push is the worst state.** The `review_visibility` memory captures why — neither VS Code's diff view nor GitHub's compare view can show the changes. When committing, always push+draft-PR in the same step. Working-tree review is fine when not committing.
+3. **Branch `feature/11b-infrastructure-persistence` is still alive** both locally and on the remote after merge. Not deleted per `git-workflow.md` (user decides). Clean up whenever.
+4. **`.claude/settings.local.json`** remains as persistent harness drift — continue to ignore.
+5. **Codex watchdog felt right** in this session — no runaway polling, the 4 passes each finished cleanly within a few minutes of their verify phase. Keep using the same companion-script path for background runs.
+6. **Plan artefact is on GitHub, not in a doc file.** Per `documentation.md` ("Planning docs ... use GitHub Issues or a plan, not a file"), the next-wave plan lives as issues #15–#31. Don't mirror it into `docs/`.
+
