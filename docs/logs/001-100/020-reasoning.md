@@ -37,10 +37,34 @@ Add a `[HttpGet]` `ListAsync` action to the existing `EventsController`. Bind qu
 
 ## Status / Next
 
-- Branch: `feature/20-get-events-controller`
-- Codex Pass 1 job ID: _(to be appended after Codex run completes)_
-- Orchestrator will: `dotnet build` → `dotnet test` → commit → push → open PR → hand to `reviewer` agent.
-- After reviewer signs off and Martin approves the PR, #20 closes and the repo reaches the MVP target for submission.
-- Issues explicitly out of scope for submission: #18, #21, #22, #23–#29, #27, #30, #31.
+**PAUSED — pending Claude Code session restart.**
 
-**Next after #20:** Martin reviews + approves PR; submission ready.
+Two backend-dev spawns this session both stopped at the Codex handoff because the runtime tool-list snapshot for subagents omitted `Skill`, even though `.claude/agents/backend-dev.md` frontmatter granted it and `.claude/settings.local.json` allowlisted `Skill(codex:rescue)`. The runtime appears to cache subagent tool grants at session start; frontmatter changes need a Claude Code restart to take effect.
+
+**Companion fix landed (PR #42, branch `chore/agent-watchdog-skill-handoff`):**
+- Explicit `Skill(skill: "codex:rescue", args: "<brief>")` invocation guidance added to backend-dev and frontend-dev.
+- Watchdog section added to both: 10-min cap, 3-min phase-stall, terminal-status stop, poll-error retry-once, 30-sec interactive-prompt bail-out, escalation format.
+- Note added that stale system-reminder tool lists should not block the attempt.
+
+**To resume in the next session:**
+1. Confirm PR #42 is merged (or merge it first).
+2. `git checkout feature/20-get-events-controller` (already exists, reasoning log skeleton committed).
+3. Spawn `backend-dev` with the brief below — it should now successfully invoke `Skill(codex:rescue)`.
+4. Standard flow from there: 2 Codex passes max, reviewer agent, Martin approval.
+
+**Brief for next backend-dev spawn (self-contained):**
+- Issue: https://github.com/yklau1989/sample_traffic-monitor-api/issues/20
+- Files to change:
+  - `src/TrafficMonitor.Api/Controllers/EventsController.cs` — add `[HttpGet] ListAsync` action with `[FromQuery] ListEventsRequest` positional record, UTC validation on `from`/`to` (return 400 ProblemDetails if `Kind != Utc`), pageSize cap 200, dispatch to `ListTrafficEventsHandler`, return `Ok(PagedResult<EventListItemDto>)`.
+  - `src/TrafficMonitor.Api/Middleware/GlobalExceptionHandler.cs` — add `InvalidSortFieldException` → 400 branch BEFORE the existing `ArgumentException` → 422 branch.
+  - `src/TrafficMonitor.Api/Program.cs` — register `ListTrafficEventsHandler` as scoped.
+  - `tests/TrafficMonitor.Tests/Api/EventsControllerTests.cs` — replace `InMemoryTrafficEventRepository.ListAsync` `NotSupportedException` stub with a real in-memory implementation mirroring `TrafficEventRepository.ListAsync` (filter + sort + page over a `List<TrafficEvent>`); add 4+ tests: happy path returns paged envelope, severity filter narrows (seed 3 events, filter `severity=high`), unknown sort field → 400, naive timestamp `from` (no `Z`) → 400.
+  - `docs/api-reference.md` — populate the `GET /api/events` section: query params, response shape, example request/response.
+- **Use stub-based test pattern from #17. Do NOT pull in Testcontainers.** #18 is out of scope for submission.
+- Take-home scope: NO RFC URL constants, NO boilerplate `const string`s. Inline literals fine.
+- Member order: properties before constructors (positional records satisfy this).
+- Out of scope: Testcontainers, refactoring #17/#19 code, any new files outside the 5 listed.
+
+**Codex job IDs:** _(to be appended after the next-session run completes)_
+
+**After #20 ships:** Martin reviews + approves PR; submission ready. Issues explicitly out of scope: #18, #21, #22, #23–#29, #27, #30, #31.
