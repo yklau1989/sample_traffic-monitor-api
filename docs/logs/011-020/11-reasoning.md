@@ -142,3 +142,49 @@ PR #13 (sub-slice 1 of #11) is merged to `main`. Sub-slice 2 is paused on `featu
 - **`tr -d '\000-\037'` on macOS must be prefixed with `LC_ALL=C`** — otherwise locale-aware byte handling mis-processes multi-byte UTF-8 in the payload and the effective strip is no-op. Saved to memory as the `shell JSON parsing` feedback.
 - **`.claude/settings.local.json`** continues to show as modified — harness drift, do not commit.
 
+
+---
+
+## Sub-slice 2 resolution — Option B (ValueConverter + JSONB) — 2026-04-18
+
+### Decision
+
+Replaced `OwnsMany(...).ToJson()` with a `ValueConverter<List<Detection>, string>` wired to `HasColumnType("jsonb")` on the `_detections` backing field. This sidesteps the EF Core 10 + `UseSnakeCaseNamingConvention()` collision that blocked `dotnet ef migrations add InitialCreate`. The JSONB storage guarantee is preserved. Two additional changes were required: `[JsonConstructor]` on the public constructors of `Detection` and `BoundingBox` (so `System.Text.Json` can deserialize through the validated constructor, not the private parameterless one), and `builder.Ignore(e => e.Detections)` in `TrafficEventConfiguration` (so EF does not register the `Detections` navigation property as an entity relationship alongside the ValueConverter-backed `_detections` field).
+
+### Options considered
+
+(Full option table is in the "Sub-slice 2 — PAUSED" section above. Martin chose B.)
+
+- **A (drop naming convention, hand-set column names)** — rejected by Martin in favour of B.
+- **B (ValueConverter + JSONB)** — chosen. Cleanest config; sidesteps every EF JSON-owned-collection quirk; naming convention stays.
+- **C (custom naming convention that skips JSON-owned properties)** — rejected; highest bespoke-code risk.
+- **D (approve a Pass 3 against the old 2-pass budget)** — ruled out by the iteration-budget rule.
+
+### Trade-offs
+
+- `OwnsMany.ToJson()` is gone. The domain model (`Detection`, `BoundingBox`) is no longer EF-first-class; it travels as a JSON blob and is deserialized on read. This means: (a) no `JSONB` path-query via EF LINQ — raw SQL would be needed for JSON subfield queries, which are out of scope; (b) `Detection` and `BoundingBox` now carry a `[JsonConstructor]` attribute, which is the only EF/serialization concern that leaked into Domain. The attribute is metadata-only and does not change observable behaviour or tests.
+- `UseSnakeCaseNamingConvention()` is retained, which is the correct outcome — the whole point of Option B was to avoid dropping it.
+- `ValueComparer<List<Detection>>` uses serialization-based equality (serialize both sides, compare strings). This is slightly heavier than field-by-field comparison but is correct for change-tracking and eliminates false positives on structural equality edge cases.
+
+### Status / Next
+
+**Verified by orchestrator (Codex sandbox cannot run migrations or reach Postgres):**
+
+- `dotnet build --nologo -v q` — 0 warnings, 0 errors (verified twice: after Pass 1 and after Pass 2).
+- `dotnet test --nologo -v q` — 30/30 pass (verified twice: after Pass 1 and after Pass 2).
+- `dotnet ef migrations add InitialCreate --project src/TrafficMonitor.Infrastructure --startup-project src/TrafficMonitor.Api` — exits 0; migration files written to `src/TrafficMonitor.Infrastructure/Migrations/`.
+- Migration content verified: table `traffic_events`, column `detections jsonb`, unique index `ix_traffic_events_event_id`, all column names snake_case.
+- `dotnet ef database update` — succeeded against compose Postgres. Schema verified via `\d traffic_events`: correct column types, PK `pk_traffic_events`, unique index present.
+- `docs/architecture.md` — Persistence section and Key design trade-offs table updated to reflect ValueConverter approach.
+
+**Open / next:**
+- No PR open yet for sub-slice 2. Martin opens the PR when ready.
+- Next issue after #11: Application layer — commands, queries, handlers, repository implementation (the repo interface already exists in Application from sub-slice 2 Pass 1).
+
+### Codex job IDs (Option B resolution — fresh 2-pass budget)
+
+- **Pass 1** — `codex exec --full-auto` launched ~12:16 JST 2026-04-18. Produced ValueConverter config, `[JsonConstructor]` attributes, architecture.md update. Build 0/0, tests 30/30. Migration failed: EF discovery registered `Detections` navigation as entity type.
+- **Pass 2** — `codex exec --full-auto` launched ~12:33 JST 2026-04-18. Added `builder.Ignore(e => e.Detections)` to `TrafficEventConfiguration`. Migration generated successfully.
+
+**Iteration budget spent (Option B resolution):** 2 of 2.
+
